@@ -1,0 +1,14 @@
+erDiagram
+    ROLES ||--o{ USERS : "has role"
+    USERS ||--o{ REFRESH_TOKENS : "has refresh tokens"
+    USERS ||--o{ COMPLAINTS : "reports"
+    USERS ||--o{ COMPLAINT_ASSIGNMENTS : "assigned as investigator"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ AUDIT_LOGS : "performs"
+
+    THREAT_CATEGORIES ||--o{ THREAT_TYPES : "contains"
+
+    COMPLAINTS ||--o{ COMPLAINT_STATUS_HISTORY : "tracks status"
+    COMPLAINTS ||--o{ COMPLAINT_ASSIGNMENTS : "assigned to"
+    COMPLAINTS ||--o{ INVESTIGATION_NOTES : "has notes"
+    COMPLAINTS ||--o{ EVIDENCE_FILES : "contains proof"

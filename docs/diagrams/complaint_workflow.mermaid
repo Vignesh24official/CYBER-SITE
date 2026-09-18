@@ -1,0 +1,13 @@
+stateDiagram-v2
+    [*] --> SUBMITTED : Victim files complaint
+    SUBMITTED --> UNDER_REVIEW : Admin begins triage
+    UNDER_REVIEW --> VALIDATED : Incident confirmed valid
+    UNDER_REVIEW --> REJECTED : False / Duplicate report
+    VALIDATED --> ASSIGNED : Investigator assigned
+    ASSIGNED --> UNDER_INVESTIGATION : Officer opens case
+    UNDER_INVESTIGATION --> WAITING_FOR_INFORMATION : Officer requests victim info
+    WAITING_FOR_INFORMATION --> UNDER_INVESTIGATION : Victim provides details
+    UNDER_INVESTIGATION --> RESOLVED : Case findings finalized
+    RESOLVED --> CLOSED : Admin closes case record
+    REJECTED --> [*]
+    CLOSED --> [*]

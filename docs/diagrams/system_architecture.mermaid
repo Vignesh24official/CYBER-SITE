@@ -1,0 +1,22 @@
+graph TD
+    User["User / Victim Browser"] -->|HTTP / JSON| Frontend["React 18 SPA (Vite / Nginx)"]
+    Investigator["Investigator Workstation"] -->|HTTP / JSON| Frontend
+    Admin["SOC Admin Workstation"] -->|HTTP / JSON| Frontend
+
+    Frontend -->|REST API / Bearer JWT| Backend["Spring Boot 3 REST API"]
+
+    subgraph Spring Boot Backend
+        SecurityFilter["Spring Security 6 (JWT Filter)"]
+        Controllers["REST Controllers"]
+        Services["Business Services & State Machine"]
+        ThreatEngine["Heuristic URL Threat Engine"]
+        Storage["Evidence File Storage"]
+    end
+
+    Backend --> SecurityFilter
+    SecurityFilter --> Controllers
+    Controllers --> Services
+    Services --> ThreatEngine
+    Services --> Storage
+
+    Services -->|Spring Data JPA| DB[("PostgreSQL Database")]

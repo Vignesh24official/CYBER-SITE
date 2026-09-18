@@ -1,0 +1,25 @@
+# Target and Build Artifacts
+**/target/
+**/dist/
+**/build/
+.mvn/wrapper/maven-wrapper.jar
+
+# Dependencies
+**/node_modules/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Environment & Credentials
+.env
+*.local
+*.log
+
+# File Storage
+uploads/
+target/

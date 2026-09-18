@@ -1,0 +1,113 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Layouts
+import { PublicLayout } from '../layouts/PublicLayout';
+import { UserLayout } from '../layouts/UserLayout';
+import { AdminLayout } from '../layouts/AdminLayout';
+import { InvestigatorLayout } from '../layouts/InvestigatorLayout';
+
+// Protected Route Guard
+import { ProtectedRoute } from './ProtectedRoute';
+
+// Public Pages
+import { LandingPage } from '../pages/public/LandingPage';
+import { SafetyCenterPage } from '../pages/public/SafetyCenterPage';
+import { ArticleDetailPage } from '../pages/public/ArticleDetailPage';
+import { NotFoundPage } from '../pages/public/NotFoundPage';
+
+// Auth Pages
+import { LoginPage } from '../pages/auth/LoginPage';
+import { RegisterPage } from '../pages/auth/RegisterPage';
+
+// User Pages
+import { UserDashboardPage } from '../pages/user/UserDashboardPage';
+import { MyComplaintsPage } from '../pages/user/MyComplaintsPage';
+import { ComplaintDetailPage } from '../pages/user/ComplaintDetailPage';
+import { ReportIncidentPage } from '../pages/user/ReportIncidentPage';
+import { UrlAnalysisPage } from '../pages/user/UrlAnalysisPage';
+import { ProfilePage } from '../pages/user/ProfilePage';
+
+// Admin SOC & Cyber Intelligence Pages
+import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
+import { ComplaintManagementPage } from '../pages/admin/ComplaintManagementPage';
+import { AdminComplaintDetailPage } from '../pages/admin/AdminComplaintDetailPage';
+import { InvestigatorManagementPage } from '../pages/admin/InvestigatorManagementPage';
+import { UserManagementPage } from '../pages/admin/UserManagementPage';
+import { ReportAnalyticsPage } from '../pages/admin/ReportAnalyticsPage';
+import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
+
+// New Enterprise Cybersecurity Intelligence & Testing Pages
+import { ReconnaissancePage } from '../pages/admin/ReconnaissancePage';
+import { AttackSurfacePage } from '../pages/admin/AttackSurfacePage';
+import { AssetsPage } from '../pages/admin/AssetsPage';
+import { VulnerabilitiesPage } from '../pages/admin/VulnerabilitiesPage';
+import { ThreatIntelPage } from '../pages/admin/ThreatIntelPage';
+import { NetworkTopologyPage } from '../pages/admin/NetworkTopologyPage';
+import { TerminalPage } from '../pages/admin/TerminalPage';
+
+// Investigator Pages
+import { InvestigatorDashboardPage } from '../pages/investigator/InvestigatorDashboardPage';
+import { AssignedCasesPage } from '../pages/investigator/AssignedCasesPage';
+import { CaseInvestigationPage } from '../pages/investigator/CaseInvestigationPage';
+
+export const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/safety" element={<SafetyCenterPage />} />
+        <Route path="/safety/:slug" element={<ArticleDetailPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
+
+      {/* Normal User Routes */}
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_USER', 'ROLE_INVESTIGATOR', 'ROLE_ADMIN']} />}>
+        <Route element={<UserLayout />}>
+          <Route path="/dashboard" element={<UserDashboardPage />} />
+          <Route path="/complaints" element={<MyComplaintsPage />} />
+          <Route path="/complaints/:id" element={<ComplaintDetailPage />} />
+          <Route path="/report" element={<ReportIncidentPage />} />
+          <Route path="/threat-analysis" element={<UrlAnalysisPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      {/* Admin SOC & Cyber Intelligence Routes */}
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_INVESTIGATOR']} />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/reconnaissance" element={<ReconnaissancePage />} />
+          <Route path="/attack-surface" element={<AttackSurfacePage />} />
+          <Route path="/assets" element={<AssetsPage />} />
+          <Route path="/vulnerabilities" element={<VulnerabilitiesPage />} />
+          <Route path="/threat-intel" element={<ThreatIntelPage />} />
+          <Route path="/network-topology" element={<NetworkTopologyPage />} />
+          <Route path="/terminal" element={<TerminalPage />} />
+          <Route path="/admin/complaints" element={<ComplaintManagementPage />} />
+          <Route path="/admin/complaints/:id" element={<AdminComplaintDetailPage />} />
+          <Route path="/admin/investigators" element={<InvestigatorManagementPage />} />
+          <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/reports" element={<ReportAnalyticsPage />} />
+          <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
+        </Route>
+      </Route>
+
+      {/* Investigator Specific Routes */}
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_INVESTIGATOR', 'ROLE_ADMIN']} />}>
+        <Route element={<InvestigatorLayout />}>
+          <Route path="/investigator" element={<InvestigatorDashboardPage />} />
+          <Route path="/investigator/cases" element={<AssignedCasesPage />} />
+          <Route path="/investigator/cases/:id" element={<CaseInvestigationPage />} />
+        </Route>
+      </Route>
+
+      {/* 404 Fallback */}
+      <Route element={<PublicLayout />}>
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
+  );
+};
