@@ -57,6 +57,13 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(user));
     }
 
+    @PutMapping("/profile")
+    @Operation(summary = "Update current authenticated user profile details")
+    public ResponseEntity<ApiResponse<UserDto>> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
+        UserDto user = authService.updateProfile(request);
+        return ResponseEntity.ok(ApiResponse.ok(user, "Profile updated successfully"));
+    }
+
     @PostMapping("/change-password")
     @Operation(summary = "Change authenticated user password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody PasswordChangeRequest request) {

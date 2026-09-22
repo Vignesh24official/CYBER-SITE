@@ -45,8 +45,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/safety-articles/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/investigator/**").hasAnyRole("INVESTIGATOR", "ADMIN")
-                .requestMatchers("/api/v1/user/**").hasAnyRole("USER", "INVESTIGATOR", "ADMIN")
+                .requestMatchers("/api/v1/investigator/**", "/api/v1/coordinator/**").hasAnyRole("COORDINATOR", "INVESTIGATOR", "ADMIN")
+                .requestMatchers("/api/v1/user/**").hasAnyRole("USER", "COORDINATOR", "INVESTIGATOR", "ADMIN")
                 .anyRequest().authenticated()
             );
 

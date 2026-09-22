@@ -325,8 +325,9 @@ public class ComplaintServiceImpl implements ComplaintService {
         boolean isAdmin = user.getRole().getName() == RoleName.ROLE_ADMIN;
         boolean isOwner = complaint.getUser().getId().equals(user.getId());
         boolean isInvestigator = user.getRole().getName() == RoleName.ROLE_INVESTIGATOR;
+        boolean isCoordinator = user.getRole().getName() == RoleName.ROLE_COORDINATOR;
 
-        if (!isAdmin && !isOwner && !isInvestigator) {
+        if (!isAdmin && !isOwner && !isInvestigator && !isCoordinator) {
             throw new UnauthorizedAccessException("You are not authorized to view this complaint");
         }
     }

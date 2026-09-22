@@ -13,4 +13,6 @@ public interface AssignmentRepository extends JpaRepository<ComplaintAssignment,
     Optional<ComplaintAssignment> findByComplaintIdAndAssignmentStatus(Long complaintId, AssignmentStatus status);
     List<ComplaintAssignment> findByComplaintIdOrderByAssignedAtDesc(Long complaintId);
     List<ComplaintAssignment> findByInvestigatorIdAndAssignmentStatus(Long investigatorId, AssignmentStatus status);
+    long countByInvestigatorId(Long investigatorId);
+    long countByInvestigatorIdAndAssignmentStatus(Long investigatorId, AssignmentStatus status);
 }

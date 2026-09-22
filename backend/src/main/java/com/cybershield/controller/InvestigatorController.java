@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/investigator")
-@PreAuthorize("hasAnyRole('INVESTIGATOR', 'ADMIN')")
+@RequestMapping({"/api/v1/investigator", "/api/v1/coordinator"})
+@PreAuthorize("hasAnyRole('COORDINATOR', 'INVESTIGATOR', 'ADMIN')")
 @RequiredArgsConstructor
-@Tag(name = "Investigator API", description = "Endpoints for investigator case management, notes, findings, and evidence inspection")
+@Tag(name = "Coordinator & Investigator API", description = "Endpoints for coordinator and investigator case management, notes, findings, and evidence inspection")
 public class InvestigatorController {
 
     private final ComplaintService complaintService;

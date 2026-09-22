@@ -186,6 +186,22 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    public UserDto updateProfile(ProfileUpdateRequest request) {
+        UserPrincipal currentUser = SecurityUtils.getCurrentUser();
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setFullName(request.getFullName().trim());
+        user.setPhone(request.getPhone());
+        User saved = userRepository.save(user);
+
+        auditLogService.logAction(user, AuditAction.USER_UPDATED, "USER", user.getPublicId(), "User updated profile information");
+
+        return mapToUserDto(saved);
+    }
+
+    @Override
+    @Transactional
     public void changePassword(PasswordChangeRequest request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("New passwords do not match");

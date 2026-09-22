@@ -106,14 +106,60 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    @Operation(summary = "Get list of registered platform users")
+    @Operation(summary = "Get paginated, searched, and filtered platform users")
     public ResponseEntity<ApiResponse<PageResponse<UserDto>>> getUsers(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) RoleName role,
+            @RequestParam(required = false) AccountStatus status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "15") int size
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
     ) {
-        PageResponse<UserDto> response = userService.getUsers(role, page, size);
+        PageResponse<UserDto> response = userService.getUsers(search, role, status, page, size, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PostMapping("/users")
+    @Operation(summary = "Create a new user or coordinator account from admin console")
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@Valid @RequestBody com.cybershield.dto.user.AdminUserCreateRequest request) {
+        UserDto user = userService.createUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(user, "User created successfully"));
+    }
+
+    @PutMapping("/users/{publicId}")
+    @Operation(summary = "Update user details from admin console")
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(
+            @PathVariable String publicId,
+            @Valid @RequestBody com.cybershield.dto.user.AdminUserUpdateRequest request
+    ) {
+        UserDto user = userService.updateUser(publicId, request);
+        return ResponseEntity.ok(ApiResponse.ok(user, "User updated successfully"));
+    }
+
+    @DeleteMapping("/users/{publicId}")
+    @Operation(summary = "Delete user account from admin console")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String publicId) {
+        userService.deleteUser(publicId);
+        return ResponseEntity.ok(ApiResponse.ok(null, "User deleted successfully"));
+    }
+
+    @PostMapping("/users/{publicId}/reset-password")
+    @Operation(summary = "Reset user password from admin console")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @PathVariable String publicId,
+            @RequestBody Map<String, String> body
+    ) {
+        String newPassword = body.getOrDefault("newPassword", "Password@123");
+        userService.resetPassword(publicId, newPassword);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Password reset successfully"));
+    }
+
+    @GetMapping("/coordinators")
+    @Operation(summary = "Get list of active coordinators and investigators with workload summary")
+    public ResponseEntity<ApiResponse<List<com.cybershield.dto.user.CoordinatorSummaryDto>>> getCoordinators() {
+        List<com.cybershield.dto.user.CoordinatorSummaryDto> coordinators = userService.getCoordinators();
+        return ResponseEntity.ok(ApiResponse.ok(coordinators));
     }
 
     @GetMapping("/investigators")
@@ -121,6 +167,12 @@ public class AdminController {
     public ResponseEntity<ApiResponse<List<UserDto>>> getInvestigators() {
         List<UserDto> investigators = userService.getInvestigators();
         return ResponseEntity.ok(ApiResponse.ok(investigators));
+    }
+
+    @GetMapping("/user-stats")
+    @Operation(summary = "Get platform user statistics")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getUserStats() {
+        return ResponseEntity.ok(ApiResponse.ok(userService.getUserStatistics()));
     }
 
     @PutMapping("/users/{publicId}/status")
@@ -135,7 +187,7 @@ public class AdminController {
     }
 
     @PutMapping("/users/{publicId}/role")
-    @Operation(summary = "Update user role (ROLE_USER, ROLE_INVESTIGATOR, ROLE_ADMIN)")
+    @Operation(summary = "Update user role (ROLE_USER, ROLE_COORDINATOR, ROLE_INVESTIGATOR, ROLE_ADMIN)")
     public ResponseEntity<ApiResponse<UserDto>> updateUserRole(
             @PathVariable String publicId,
             @RequestBody Map<String, String> body
