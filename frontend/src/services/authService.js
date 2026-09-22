@@ -17,6 +17,10 @@ export const authService = {
     return api.get('/auth/me');
   },
 
+  async updateProfile(data) {
+    return api.put('/auth/profile', data);
+  },
+
   async changePassword(data) {
     return api.post('/auth/change-password', data);
   },

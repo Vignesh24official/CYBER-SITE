@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { UserLayout } from '../layouts/UserLayout';
 import { AdminLayout } from '../layouts/AdminLayout';
+import { CoordinatorLayout } from '../layouts/CoordinatorLayout';
 import { InvestigatorLayout } from '../layouts/InvestigatorLayout';
 
 // Protected Route Guard
@@ -28,6 +29,11 @@ import { ReportIncidentPage } from '../pages/user/ReportIncidentPage';
 import { UrlAnalysisPage } from '../pages/user/UrlAnalysisPage';
 import { ProfilePage } from '../pages/user/ProfilePage';
 
+// Coordinator Pages
+import { CoordinatorDashboardPage } from '../pages/coordinator/CoordinatorDashboardPage';
+import { CoordinatorRecordsPage } from '../pages/coordinator/CoordinatorRecordsPage';
+import { CoordinatorTasksPage } from '../pages/coordinator/CoordinatorTasksPage';
+
 // Admin SOC & Cyber Intelligence Pages
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { ComplaintManagementPage } from '../pages/admin/ComplaintManagementPage';
@@ -37,7 +43,7 @@ import { UserManagementPage } from '../pages/admin/UserManagementPage';
 import { ReportAnalyticsPage } from '../pages/admin/ReportAnalyticsPage';
 import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
 
-// New Enterprise Cybersecurity Intelligence & Testing Pages
+// Advanced Cyber Intelligence Pages
 import { ReconnaissancePage } from '../pages/admin/ReconnaissancePage';
 import { AttackSurfacePage } from '../pages/admin/AttackSurfacePage';
 import { AssetsPage } from '../pages/admin/AssetsPage';
@@ -46,7 +52,7 @@ import { ThreatIntelPage } from '../pages/admin/ThreatIntelPage';
 import { NetworkTopologyPage } from '../pages/admin/NetworkTopologyPage';
 import { TerminalPage } from '../pages/admin/TerminalPage';
 
-// Investigator Pages
+// Investigator Pages (Backwards Compatibility)
 import { InvestigatorDashboardPage } from '../pages/investigator/InvestigatorDashboardPage';
 import { AssignedCasesPage } from '../pages/investigator/AssignedCasesPage';
 import { CaseInvestigationPage } from '../pages/investigator/CaseInvestigationPage';
@@ -64,7 +70,7 @@ export const AppRoutes = () => {
       </Route>
 
       {/* Normal User Routes */}
-      <Route element={<ProtectedRoute allowedRoles={['ROLE_USER', 'ROLE_INVESTIGATOR', 'ROLE_ADMIN']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_USER', 'ROLE_COORDINATOR', 'ROLE_INVESTIGATOR', 'ROLE_ADMIN']} />}>
         <Route element={<UserLayout />}>
           <Route path="/dashboard" element={<UserDashboardPage />} />
           <Route path="/complaints" element={<MyComplaintsPage />} />
@@ -75,10 +81,29 @@ export const AppRoutes = () => {
         </Route>
       </Route>
 
-      {/* Admin SOC & Cyber Intelligence Routes */}
-      <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_INVESTIGATOR']} />}>
+      {/* Coordinator Console Routes (Strictly for Coordinator & Investigator) */}
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_COORDINATOR', 'ROLE_INVESTIGATOR']} />}>
+        <Route element={<CoordinatorLayout />}>
+          <Route path="/coordinator" element={<CoordinatorDashboardPage />} />
+          <Route path="/coordinator/records" element={<CoordinatorRecordsPage />} />
+          <Route path="/coordinator/tasks" element={<CoordinatorTasksPage filterType="PENDING" />} />
+          <Route path="/coordinator/completed" element={<CoordinatorTasksPage filterType="COMPLETED" />} />
+          <Route path="/coordinator/cases/:id" element={<CaseInvestigationPage />} />
+          <Route path="/coordinator/profile" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      {/* Admin SOC Routes (Strictly Restricted to ROLE_ADMIN) */}
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/coordinators" element={<InvestigatorManagementPage />} />
+          <Route path="/admin/investigators" element={<InvestigatorManagementPage />} />
+          <Route path="/admin/complaints" element={<ComplaintManagementPage />} />
+          <Route path="/admin/complaints/:id" element={<AdminComplaintDetailPage />} />
+          <Route path="/admin/reports" element={<ReportAnalyticsPage />} />
+          <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
           <Route path="/reconnaissance" element={<ReconnaissancePage />} />
           <Route path="/attack-surface" element={<AttackSurfacePage />} />
           <Route path="/assets" element={<AssetsPage />} />
@@ -86,17 +111,11 @@ export const AppRoutes = () => {
           <Route path="/threat-intel" element={<ThreatIntelPage />} />
           <Route path="/network-topology" element={<NetworkTopologyPage />} />
           <Route path="/terminal" element={<TerminalPage />} />
-          <Route path="/admin/complaints" element={<ComplaintManagementPage />} />
-          <Route path="/admin/complaints/:id" element={<AdminComplaintDetailPage />} />
-          <Route path="/admin/investigators" element={<InvestigatorManagementPage />} />
-          <Route path="/admin/users" element={<UserManagementPage />} />
-          <Route path="/admin/reports" element={<ReportAnalyticsPage />} />
-          <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
         </Route>
       </Route>
 
-      {/* Investigator Specific Routes */}
-      <Route element={<ProtectedRoute allowedRoles={['ROLE_INVESTIGATOR', 'ROLE_ADMIN']} />}>
+      {/* Backwards-compatible Investigator routes */}
+      <Route element={<ProtectedRoute allowedRoles={['ROLE_INVESTIGATOR', 'ROLE_COORDINATOR', 'ROLE_ADMIN']} />}>
         <Route element={<InvestigatorLayout />}>
           <Route path="/investigator" element={<InvestigatorDashboardPage />} />
           <Route path="/investigator/cases" element={<AssignedCasesPage />} />

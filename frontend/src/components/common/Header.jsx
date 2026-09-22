@@ -7,7 +7,7 @@ import { CommandPaletteModal } from './CommandPaletteModal';
 import { CyberShieldSecurityPulse } from './CyberShieldSecurityPulse';
 
 export const Header = () => {
-  const { user, isAuthenticated, logout, isAdmin, isInvestigator } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin, isCoordinator, isInvestigator } = useAuth();
   const navigate = useNavigate();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
@@ -106,14 +106,20 @@ export const Header = () => {
                 </div>
 
                 {isAdmin && (
-                  <Link to="/admin" className="btn btn-secondary btn-sm" title="SOC Admin Dashboard">
-                    <ShieldAlert size={14} /> SOC Admin
+                  <Link to="/admin" className="btn btn-secondary btn-sm" title="SOC Admin Console">
+                    <ShieldAlert size={14} /> Admin Console
                   </Link>
                 )}
 
-                {isInvestigator && !isAdmin && (
-                  <Link to="/investigator" className="btn btn-secondary btn-sm" title="Investigator Workbench">
-                    <LayoutDashboard size={14} /> Workbench
+                {isCoordinator && !isAdmin && (
+                  <Link to="/coordinator" className="btn btn-secondary btn-sm" title="Coordinator Console">
+                    <LayoutDashboard size={14} /> Coordinator Console
+                  </Link>
+                )}
+
+                {!isAdmin && !isCoordinator && (
+                  <Link to="/dashboard" className="btn btn-secondary btn-sm" title="User Workspace">
+                    <LayoutDashboard size={14} /> Dashboard
                   </Link>
                 )}
 

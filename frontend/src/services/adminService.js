@@ -22,12 +22,46 @@ export const adminService = {
     return api.post(`/admin/complaints/${publicId}/request-info`, { notes });
   },
 
-  async getUsers(role = '', page = 0, size = 15) {
-    return api.get(`/admin/users?role=${role}&page=${page}&size=${size}`);
+  async getUsers(params = {}) {
+    if (typeof params === 'string') {
+      return api.get(`/admin/users?role=${params}`);
+    }
+    const cleanParams = {};
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    return api.get(`/admin/users?${query}`);
+  },
+
+  async createUser(userData) {
+    return api.post('/admin/users', userData);
+  },
+
+  async updateUser(publicId, userData) {
+    return api.put(`/admin/users/${publicId}`, userData);
+  },
+
+  async deleteUser(publicId) {
+    return api.delete(`/admin/users/${publicId}`);
+  },
+
+  async resetPassword(publicId, newPassword) {
+    return api.post(`/admin/users/${publicId}/reset-password`, { newPassword });
+  },
+
+  async getCoordinators() {
+    return api.get('/admin/coordinators');
   },
 
   async getInvestigators() {
     return api.get('/admin/investigators');
+  },
+
+  async getUserStats() {
+    return api.get('/admin/user-stats');
   },
 
   async updateUserStatus(publicId, status) {

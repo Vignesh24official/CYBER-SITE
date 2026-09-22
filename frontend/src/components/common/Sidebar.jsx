@@ -3,12 +3,17 @@ import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, AlertTriangle, FileText, Search, User, ShieldAlert, 
   Users, BarChart3, Clock, Settings, BookOpen, Briefcase, Cpu, Globe, 
-  HardDrive, Activity, Network, Terminal
+  HardDrive, Activity, Network, Terminal, CheckCircle2, ListFilter
 } from 'lucide-react';
 
 export const Sidebar = ({ type = 'admin' }) => {
   const adminLinks = [
     { to: '/admin', label: 'SOC Command Center', icon: LayoutDashboard },
+    { to: '/admin/users', label: 'Users Directory', icon: Users },
+    { to: '/admin/coordinators', label: 'Coordinators Roster', icon: Briefcase },
+    { to: '/admin/complaints', label: 'Incident Records Grid', icon: ShieldAlert },
+    { to: '/admin/reports', label: 'Analytics & Export', icon: BarChart3 },
+    { to: '/admin/audit-logs', label: 'Audit Trail Logs', icon: Clock },
     { to: '/reconnaissance', label: 'Reconnaissance', icon: Cpu },
     { to: '/attack-surface', label: 'Attack Surface', icon: Globe },
     { to: '/assets', label: 'Monitored Assets', icon: HardDrive },
@@ -16,34 +21,32 @@ export const Sidebar = ({ type = 'admin' }) => {
     { to: '/threat-intel', label: 'Threat Intelligence', icon: Activity },
     { to: '/network-topology', label: 'Network Topology', icon: Network },
     { to: '/terminal', label: 'Integrated CLI', icon: Terminal },
-    { to: '/admin/complaints', label: 'Incident Grid', icon: ShieldAlert },
-    { to: '/admin/investigators', label: 'Investigators', icon: Briefcase },
-    { to: '/admin/users', label: 'User Directory', icon: Users },
-    { to: '/admin/reports', label: 'Analytics & Export', icon: BarChart3 },
-    { to: '/admin/audit-logs', label: 'Audit Trail Logs', icon: Clock },
     { to: '/threat-analysis', label: 'URL Threat Analyzer', icon: Search },
+    { to: '/profile', label: 'Administrator Profile', icon: User },
   ];
 
-  const investigatorLinks = [
-    { to: '/investigator', label: 'Workbench', icon: LayoutDashboard },
-    { to: '/investigator/cases', label: 'Assigned Cases', icon: Briefcase },
-    { to: '/vulnerabilities', label: 'Vulnerabilities', icon: AlertTriangle },
-    { to: '/threat-intel', label: 'Threat Intel', icon: Activity },
-    { to: '/terminal', label: 'Integrated CLI', icon: Terminal },
+  const coordinatorLinks = [
+    { to: '/coordinator', label: 'Coordinator Console', icon: LayoutDashboard },
+    { to: '/coordinator/records', label: 'Assigned Records', icon: Briefcase },
+    { to: '/coordinator/tasks', label: 'Pending Tasks', icon: ListFilter },
+    { to: '/coordinator/completed', label: 'Completed Tasks', icon: CheckCircle2 },
     { to: '/threat-analysis', label: 'URL Threat Analyzer', icon: Search },
     { to: '/safety', label: 'Safety Resources', icon: BookOpen },
+    { to: '/profile', label: 'Coordinator Profile', icon: User },
   ];
+
+  const investigatorLinks = coordinatorLinks;
 
   const userLinks = [
     { to: '/dashboard', label: 'My Dashboard', icon: LayoutDashboard },
-    { to: '/complaints', label: 'My Complaints', icon: FileText },
+    { to: '/complaints', label: 'My Records', icon: FileText },
     { to: '/report', label: 'Report Incident', icon: AlertTriangle },
     { to: '/threat-analysis', label: 'URL Analyzer', icon: Search },
     { to: '/safety', label: 'Safety Center', icon: BookOpen },
     { to: '/profile', label: 'Account Profile', icon: User },
   ];
 
-  const links = type === 'admin' ? adminLinks : type === 'investigator' ? investigatorLinks : userLinks;
+  const links = type === 'admin' ? adminLinks : type === 'coordinator' ? coordinatorLinks : type === 'investigator' ? investigatorLinks : userLinks;
 
   return (
     <aside
@@ -60,7 +63,7 @@ export const Sidebar = ({ type = 'admin' }) => {
       }}
     >
       <div style={{ padding: '4px 10px 12px', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        {type === 'admin' ? 'Cyber Intelligence SOC' : type === 'investigator' ? 'Investigation Unit' : 'Incident Portal'}
+        {type === 'admin' ? 'Cyber Intelligence SOC' : type === 'coordinator' || type === 'investigator' ? 'Coordinator Console' : 'Incident Portal'}
       </div>
 
       {links.map((link) => {
@@ -69,7 +72,7 @@ export const Sidebar = ({ type = 'admin' }) => {
           <NavLink
             key={link.to}
             to={link.to}
-            end={link.to === '/admin' || link.to === '/investigator' || link.to === '/dashboard'}
+            end={link.to === '/admin' || link.to === '/coordinator' || link.to === '/dashboard'}
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',

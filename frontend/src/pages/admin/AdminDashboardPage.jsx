@@ -8,12 +8,14 @@ import { StatusBadge, SeverityBadge } from '../../components/common/Badge';
 import { NetworkTopology } from '../../components/common/NetworkTopology';
 import { 
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, FileText, Download, Users, 
-  Shield, Cpu, Terminal, Search, Activity, Globe, HardDrive, ArrowUpRight
+  Shield, Cpu, Terminal, Search, Activity, Globe, HardDrive, ArrowUpRight,
+  UserCheck, Briefcase, RefreshCw, KeyRound
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const AdminDashboardPage = () => {
   const [summary, setSummary] = useState(null);
+  const [userStats, setUserStats] = useState(null);
   const [recentComplaints, setRecentComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,44 +28,53 @@ export const AdminDashboardPage = () => {
     { time: '20:00', ingress: 890, egress: 430, threats: 4 }
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [sumRes, compRes] = await Promise.all([
-          reportService.getAnalyticsSummary(),
-          adminService.getComplaints({ page: 0, size: 6, sortBy: 'createdAt', sortDir: 'desc' }),
-        ]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [sumRes, compRes, userRes] = await Promise.all([
+        reportService.getAnalyticsSummary(),
+        adminService.getComplaints({ page: 0, size: 6, sortBy: 'createdAt', sortDir: 'desc' }),
+        adminService.getUserStats().catch(() => ({ success: false, data: null }))
+      ]);
 
-        if (sumRes.success && sumRes.data) {
-          setSummary(sumRes.data);
-        }
-        if (compRes.success && compRes.data) {
-          setRecentComplaints(compRes.data.content || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+      if (sumRes.success && sumRes.data) {
+        setSummary(sumRes.data);
       }
-    };
+      if (compRes.success && compRes.data) {
+        setRecentComplaints(compRes.data.content || []);
+      }
+      if (userRes && userRes.success && userRes.data) {
+        setUserStats(userRes.data);
+      }
+    } catch (err) {
+      console.error('Error fetching admin dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', backgroundColor: '#0f1420', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', backgroundColor: '#0f1420', padding: '20px 24px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Shield size={24} color="var(--accent-cyan-bright)" />
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFF' }}>SOC Command Center & Cyber Intelligence</h2>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Real-time security posture monitoring, threat telemetry, network topology & active incident triage
+            Real-time security posture monitoring, threat telemetry, multi-role user directory & active incident triage
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={fetchData} className="btn btn-secondary btn-sm" title="Refresh Live Metrics">
+            <RefreshCw size={14} className={loading ? 'spin-anim' : ''} /> Refresh
+          </button>
           <Link to="/terminal" className="btn btn-secondary btn-sm">
             <Terminal size={14} /> Integrated CLI
           </Link>
@@ -102,7 +113,7 @@ export const AdminDashboardPage = () => {
           </span>
         </div>
 
-        {/* 4 Core Stat Cards */}
+        {/* 4 Core Incident Stat Cards */}
         {summary && (
           <div className="grid-4">
             <StatCard title="Total Incidents" value={summary.totalIncidents} icon={FileText} color="var(--accent-cyan-bright)" />
@@ -112,6 +123,70 @@ export const AdminDashboardPage = () => {
           </div>
         )}
       </div>
+
+      {/* PLATFORM USER & ROSTER METRICS ROW */}
+      {userStats && (
+        <div className="card" style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Users size={20} color="var(--accent-cyan-bright)" />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFF' }}>
+                Platform Multi-Role User Registry
+              </h3>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Link to="/admin/users" className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Users size={14} /> Manage All Users
+              </Link>
+              <Link to="/admin/coordinators" className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Briefcase size={14} /> Officer Roster
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid-4" style={{ gap: '16px' }}>
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-dark)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'rgba(6, 182, 212, 0.15)', color: 'var(--accent-cyan-bright)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Users size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFF' }}>{userStats.totalUsers ?? 0}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Registered Accounts</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-dark)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'rgba(168, 85, 247, 0.15)', color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Briefcase size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFF' }}>{userStats.coordinatorsCount ?? 0}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Coordinators & Investigators</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-dark)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <UserCheck size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFF' }}>{userStats.citizensCount ?? 0}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Registered Citizens / Users</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-dark)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-rose)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Shield size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFF' }}>{userStats.adminsCount ?? 0}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>System Administrators</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Network Topology Visualization */}
       <NetworkTopology />

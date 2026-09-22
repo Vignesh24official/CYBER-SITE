@@ -43,8 +43,10 @@ export const LoginPage = () => {
       const role = authData?.role || authData?.user?.role;
       if (role === 'ROLE_ADMIN') {
         navigate('/admin');
+      } else if (role === 'ROLE_COORDINATOR') {
+        navigate('/coordinator');
       } else if (role === 'ROLE_INVESTIGATOR') {
-        navigate('/investigator');
+        navigate('/coordinator');
       } else {
         navigate('/dashboard');
       }

@@ -38,8 +38,15 @@ export const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setErrorMsg('Passwords do not match. Please re-enter.');
+
+    if (!fullName || fullName.trim().length < 2) {
+      setErrorMsg('Full name must be at least 2 characters long.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email.trim())) {
+      setErrorMsg('Please enter a valid email address.');
       return;
     }
 
@@ -48,15 +55,27 @@ export const RegisterPage = () => {
       return;
     }
 
+    const passwordComplexityRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-]).{8,}$/;
+    if (!passwordComplexityRegex.test(password)) {
+      setErrorMsg('Password must include at least one uppercase letter, one lowercase letter, one number, and one special symbol (@#$%^&+=!._-).');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match. Please re-enter.');
+      return;
+    }
+
     setErrorMsg('');
     setLoading(true);
 
     try {
       await register({
-        fullName,
-        email,
-        phone,
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone ? phone.trim() : '',
         password,
+        confirmPassword,
       });
 
       showSuccess('Account registered successfully! Redirecting to user workspace...');
