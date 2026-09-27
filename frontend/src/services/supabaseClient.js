@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Retrieve Supabase environment variables from Vite
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ndoyiyfevnpqdvcsommy.supabase.co';
+const rawUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ndoyiyfevnpqdvcsommy.supabase.co';
+// Normalize URL: Strip trailing slashes and '/rest/v1' if user provided the REST API endpoint directly
+const supabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Check if valid credentials are provided
