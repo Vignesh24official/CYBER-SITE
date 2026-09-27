@@ -4,7 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 const rawUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ndoyiyfevnpqdvcsommy.supabase.co';
 // Normalize URL: Strip trailing slashes and '/rest/v1' if user provided the REST API endpoint directly
 const supabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kb3lpeWZldm5wcWR2Y3NvbW15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTU3MzAsImV4cCI6MjEwNjA5MTczMH0.huH3HKvVksFnS7DF5lgpbKfHNK78vwOz0vMe6rVPUtE';
 
 // Check if valid credentials are provided
 export const isSupabaseConfigured = Boolean(
