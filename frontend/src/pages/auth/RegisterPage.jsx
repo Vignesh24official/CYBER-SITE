@@ -4,6 +4,7 @@ import { Shield, User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle, AlertCircle,
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { CyberShieldSecurityPulse } from '../../components/common/CyberShieldSecurityPulse';
+import { GoogleAuthModal, GoogleIcon } from '../../components/auth/GoogleAuthModal';
 
 export const RegisterPage = () => {
   const [fullName, setFullName] = useState('');
@@ -14,6 +15,7 @@ export const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   const { register } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -121,6 +123,43 @@ export const RegisterPage = () => {
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: '480px', margin: '0 auto' }}>
             Join the enterprise security ecosystem to securely report incidents, track investigations, and access cyber defense resources.
           </p>
+        </div>
+
+        {/* 1-CLICK GOOGLE SIGN-UP BUTTON */}
+        <div style={{ marginBottom: '24px' }}>
+          <button
+            type="button"
+            onClick={() => setShowGoogleModal(true)}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '14px 20px',
+              backgroundColor: '#ffffff',
+              color: '#111827',
+              border: '1px solid #e5e7eb',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <GoogleIcon size={22} />
+            <span>Sign Up with Google (Instant Citizen Account)</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0 0 0', gap: '12px' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+              OR REGISTER WITH EMAIL & CREDENTIALS
+            </span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+          </div>
         </div>
 
         {errorMsg && (
@@ -359,6 +398,13 @@ export const RegisterPage = () => {
           </Link>
         </div>
       </div>
+
+      {/* Google Sign-Up Modal */}
+      <GoogleAuthModal
+        isOpen={showGoogleModal}
+        onClose={() => setShowGoogleModal(false)}
+        mode="signup"
+      />
     </div>
   );
 };

@@ -147,4 +147,97 @@ class AuthServiceTest {
         assertEquals("mockAccessToken", response.getAccessToken());
         assertEquals("john@example.com", response.getUser().getEmail());
     }
+
+    @Test
+    @DisplayName("Should successfully login existing Admin via Google Account")
+    void googleAuth_ExistingAdmin_Success() {
+        Role adminRole = Role.builder().id(3L).name(RoleName.ROLE_ADMIN).build();
+        User adminUser = User.builder()
+                .id(3L)
+                .publicId("u-admin")
+                .fullName("System Administrator")
+                .email("admin@cybershield.org")
+                .passwordHash("hashedPass")
+                .role(adminRole)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        com.cybershield.dto.auth.GoogleAuthRequest request = com.cybershield.dto.auth.GoogleAuthRequest.builder()
+                .email("admin@cybershield.org")
+                .name("System Administrator")
+                .isSignUp(false)
+                .build();
+
+        when(userRepository.findByEmail("admin@cybershield.org")).thenReturn(Optional.of(adminUser));
+        when(userRepository.save(any(User.class))).thenReturn(adminUser);
+        when(tokenProvider.generateAccessToken(any())).thenReturn("adminAccessToken");
+        when(tokenProvider.generateRefreshToken(any())).thenReturn("adminRefreshToken");
+        when(tokenProvider.getRefreshTokenExpirationMs()).thenReturn(604800000L);
+
+        AuthResponse response = authService.googleAuth(request);
+
+        assertNotNull(response);
+        assertEquals("adminAccessToken", response.getAccessToken());
+        assertEquals("ROLE_ADMIN", response.getUser().getRole());
+        assertEquals("admin@cybershield.org", response.getUser().getEmail());
+        verify(userRepository, times(1)).save(adminUser);
+    }
+
+    @Test
+    @DisplayName("Should successfully login existing Investigator / Coordinator via Google Account")
+    void googleAuth_ExistingInvestigator_Success() {
+        Role investigatorRole = Role.builder().id(2L).name(RoleName.ROLE_INVESTIGATOR).build();
+        User investigatorUser = User.builder()
+                .id(2L)
+                .publicId("u-investigator")
+                .fullName("Lead Investigator")
+                .email("investigator@cybershield.org")
+                .passwordHash("hashedPass")
+                .role(investigatorRole)
+                .accountStatus(AccountStatus.ACTIVE)
+                .build();
+
+        com.cybershield.dto.auth.GoogleAuthRequest request = com.cybershield.dto.auth.GoogleAuthRequest.builder()
+                .email("investigator@cybershield.org")
+                .name("Lead Investigator")
+                .isSignUp(false)
+                .build();
+
+        when(userRepository.findByEmail("investigator@cybershield.org")).thenReturn(Optional.of(investigatorUser));
+        when(userRepository.save(any(User.class))).thenReturn(investigatorUser);
+        when(tokenProvider.generateAccessToken(any())).thenReturn("investigatorAccessToken");
+        when(tokenProvider.generateRefreshToken(any())).thenReturn("investigatorRefreshToken");
+        when(tokenProvider.getRefreshTokenExpirationMs()).thenReturn(604800000L);
+
+        AuthResponse response = authService.googleAuth(request);
+
+        assertNotNull(response);
+        assertEquals("investigatorAccessToken", response.getAccessToken());
+        assertEquals("ROLE_INVESTIGATOR", response.getUser().getRole());
+        assertEquals("investigator@cybershield.org", response.getUser().getEmail());
+    }
+
+    @Test
+    @DisplayName("Should successfully register a new Citizen user via Google Sign-Up")
+    void googleAuth_NewCitizen_SignUp_Success() {
+        com.cybershield.dto.auth.GoogleAuthRequest request = com.cybershield.dto.auth.GoogleAuthRequest.builder()
+                .email("newcitizen@gmail.com")
+                .name("Jane Citizen")
+                .isSignUp(true)
+                .build();
+
+        when(userRepository.findByEmail("newcitizen@gmail.com")).thenReturn(Optional.empty());
+        when(roleRepository.findByName(RoleName.ROLE_USER)).thenReturn(Optional.of(userRole));
+        when(passwordEncoder.encode(anyString())).thenReturn("hashedGooglePass");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(tokenProvider.generateAccessToken(any())).thenReturn("citizenAccessToken");
+        when(tokenProvider.generateRefreshToken(any())).thenReturn("citizenRefreshToken");
+        when(tokenProvider.getRefreshTokenExpirationMs()).thenReturn(604800000L);
+
+        AuthResponse response = authService.googleAuth(request);
+
+        assertNotNull(response);
+        assertEquals("citizenAccessToken", response.getAccessToken());
+        verify(userRepository, times(1)).save(any(User.class));
+    }
 }

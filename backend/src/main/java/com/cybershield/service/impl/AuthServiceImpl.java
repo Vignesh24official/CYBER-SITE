@@ -19,6 +19,8 @@ import com.cybershield.security.SecurityUtils;
 import com.cybershield.security.UserPrincipal;
 import com.cybershield.service.AuditLogService;
 import com.cybershield.service.AuthService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -48,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final AuditLogService auditLogService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     @Transactional
@@ -115,6 +119,87 @@ public class AuthServiceImpl implements AuthService {
             });
             throw ex;
         }
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse googleAuth(GoogleAuthRequest request) {
+        String email = request.getEmail();
+        String name = request.getName();
+        String picture = request.getPicture();
+
+        // If Google JWT credential was provided, extract claims from it
+        if (request.getCredential() != null && !request.getCredential().isBlank()) {
+            try {
+                String[] parts = request.getCredential().split("\\.");
+                if (parts.length >= 2) {
+                    String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+                    JsonNode node = objectMapper.readTree(payloadJson);
+                    if (node.has("email") && (email == null || email.isBlank())) {
+                        email = node.get("email").asText();
+                    }
+                    if (node.has("name") && (name == null || name.isBlank())) {
+                        name = node.get("name").asText();
+                    }
+                    if (node.has("picture") && (picture == null || picture.isBlank())) {
+                        picture = node.get("picture").asText();
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse Google credential token payload: {}", e.getMessage());
+            }
+        }
+
+        if (email == null || email.trim().isBlank()) {
+            throw new IllegalArgumentException("Valid Google email address is required for authentication");
+        }
+
+        email = email.toLowerCase().trim();
+        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+
+        User user;
+        if (existingUserOpt.isPresent()) {
+            // Existing user (can be ROLE_ADMIN, ROLE_INVESTIGATOR, ROLE_COORDINATOR, or ROLE_USER)
+            user = existingUserOpt.get();
+
+            if (user.getAccountStatus() == AccountStatus.LOCKED || user.getAccountStatus() == AccountStatus.SUSPENDED) {
+                throw new UnauthorizedAccessException("Account is " + user.getAccountStatus() + ". Please contact administrator.");
+            }
+
+            user.setLastLoginAt(LocalDateTime.now());
+            user.setFailedLoginAttempts(0);
+            userRepository.save(user);
+
+            auditLogService.logAction(user, AuditAction.LOGIN, "USER", user.getPublicId(),
+                    "Google Single Sign-On successful for role: " + user.getRole().getName());
+        } else {
+            // New citizen registration via Google Sign-Up
+            // Security safeguard: only ROLE_USER can be self-registered via Google OAuth
+            Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                    .orElseThrow(() -> new ResourceNotFoundException("Default citizen role not found"));
+
+            String userFullName = (name != null && !name.isBlank()) ? name.trim() : email.split("@")[0];
+
+            user = User.builder()
+                    .publicId(UUID.randomUUID().toString())
+                    .fullName(userFullName)
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .role(userRole)
+                    .accountStatus(AccountStatus.ACTIVE)
+                    .failedLoginAttempts(0)
+                    .build();
+
+            user = userRepository.save(user);
+
+            auditLogService.logAction(user, AuditAction.USER_CREATED, "USER", user.getPublicId(),
+                    "New citizen account registered via Google Sign-Up");
+        }
+
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+
+        return buildAuthResponse(authentication, user);
     }
 
     @Override

@@ -4,6 +4,7 @@ import { Shield, Lock, Mail, Eye, EyeOff, CheckCircle, AlertCircle, ArrowRight, 
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { CyberShieldSecurityPulse } from '../../components/common/CyberShieldSecurityPulse';
+import { GoogleAuthModal, GoogleIcon } from '../../components/auth/GoogleAuthModal';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ export const LoginPage = () => {
   const [authStageText, setAuthStageText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   const { login } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -59,6 +61,35 @@ export const LoginPage = () => {
     }
   };
 
+  const handleQuickLogin = async (demoEmail, roleLabel) => {
+    setEmail(demoEmail);
+    setPassword('Password@123');
+    setErrorMsg('');
+    setLoading(true);
+    setAuthStageText(`Authorizing ${roleLabel}...`);
+
+    try {
+      await new Promise((r) => setTimeout(r, 300));
+      const authData = await login({ email: demoEmail, password: 'Password@123' });
+      showSuccess(`Authorized as ${roleLabel}!`);
+
+      const role = authData?.role || authData?.user?.role;
+      if (role === 'ROLE_ADMIN') {
+        navigate('/admin');
+      } else if (role === 'ROLE_COORDINATOR' || role === 'ROLE_INVESTIGATOR') {
+        navigate('/coordinator');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setLoading(false);
+      setAuthStageText('');
+      const msg = err?.response?.data?.message || err.message || 'Authentication error';
+      setErrorMsg(msg);
+      showError(msg);
+    }
+  };
+
   return (
     <div
       style={{
@@ -73,7 +104,7 @@ export const LoginPage = () => {
       <div
         style={{
           width: '100%',
-          maxWidth: '1000px',
+          maxWidth: '1080px',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
           backgroundColor: 'var(--bg-card)',
@@ -83,10 +114,10 @@ export const LoginPage = () => {
           boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
         }}
       >
-        {/* LEFT PANEL: CYBERSHIELD IDENTITY & ANIMATED ENVIRONMENT */}
+        {/* LEFT PANEL: CYBERSHIELD IDENTITY & 3 INTERACTIVE ROLE LOGINS */}
         <div
           style={{
-            padding: '48px 40px',
+            padding: '48px 36px',
             background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(7, 9, 14, 0.95) 100%)',
             borderRight: '1px solid var(--border-color)',
             display: 'flex',
@@ -100,7 +131,7 @@ export const LoginPage = () => {
               <CyberShieldSecurityPulse statusText="PORTAL SECURITY ACTIVE" />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <Shield size={36} color="var(--accent-cyan-bright)" />
               <div>
                 <h2 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#FFF', margin: 0 }}>
@@ -112,45 +143,228 @@ export const LoginPage = () => {
               </div>
             </div>
 
-            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px' }}>
-              Access your personal defense portal, investigator workbench, or executive SOC command center.
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '24px' }}>
+              Access your role-specific security console with end-to-end encrypted session authorization.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <CheckCircle size={18} color="var(--accent-emerald)" />
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>Encrypted JWT Role Session</span>
+            {/* 3 DIRECT 1-CLICK ROLE ACCESS CARDS */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: 'var(--accent-cyan-bright)', letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}>
+                ⚡ 1-Click Access to 3 Core Workspaces:
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <CheckCircle size={18} color="var(--accent-emerald)" />
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>Immutable Audit Event Logging</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <CheckCircle size={18} color="var(--accent-emerald)" />
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>Zero-Trust API Authorization</span>
-              </div>
+
+              {/* 1. ADMIN SOC CONSOLE */}
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('admin@cybershield.org', 'SOC Administrator')}
+                disabled={loading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  borderRadius: '10px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={18} color="#f87171" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>1. SOC Admin Console</div>
+                    <div style={{ fontSize: '0.7rem', color: '#fca5a5', fontFamily: 'monospace' }}>admin@cybershield.org</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#f87171', fontWeight: 700, fontFamily: 'monospace' }}>
+                  <span>LOGIN</span>
+                  <ArrowRight size={14} />
+                </div>
+              </button>
+
+              {/* 2. INVESTIGATOR / COORDINATOR WORKBENCH */}
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('investigator@cybershield.org', 'Lead Investigator')}
+                disabled={loading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  borderRadius: '10px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Terminal size={18} color="#fbbf24" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>2. Coordinator Workbench</div>
+                    <div style={{ fontSize: '0.7rem', color: '#fcd34d', fontFamily: 'monospace' }}>investigator@cybershield.org</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#fbbf24', fontWeight: 700, fontFamily: 'monospace' }}>
+                  <span>LOGIN</span>
+                  <ArrowRight size={14} />
+                </div>
+              </button>
+
+              {/* 3. CITIZEN / USER DEFENSE WORKSPACE */}
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('user@cybershield.org', 'Citizen Reporter')}
+                disabled={loading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                  border: '1px solid rgba(6, 182, 212, 0.35)',
+                  borderRadius: '10px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: 'rgba(6, 182, 212, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckCircle size={18} color="#38bdf8" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>3. Citizen Defense Portal</div>
+                    <div style={{ fontSize: '0.7rem', color: '#7dd3fc', fontFamily: 'monospace' }}>user@cybershield.org</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 700, fontFamily: 'monospace' }}>
+                  <span>LOGIN</span>
+                  <ArrowRight size={14} />
+                </div>
+              </button>
             </div>
           </div>
 
-          <div style={{ marginTop: '40px', pt: '20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-              DEV TEST SEED ACCOUNTS (Password: <span style={{ color: 'var(--accent-amber)' }}>Password@123</span>):
-            </div>
-            <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--accent-cyan-bright)', marginTop: '4px' }}>
-              admin@cybershield.org | investigator@cybershield.org | user@cybershield.org
+          <div style={{ marginTop: '24px', pt: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+              SEED PASSWORD FOR ALL 3: <strong style={{ color: 'var(--accent-amber)' }}>Password@123</strong>
             </div>
           </div>
         </div>
 
         {/* RIGHT PANEL: AUTHENTICATION FORM */}
         <div style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>
               Sign In to CyberShield
             </h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Enter your verified credentials to access your security workspace.
+              Enter your credentials or authenticate via enterprise Google SSO.
             </p>
+          </div>
+
+          {/* GOOGLE SSO LOGIN BUTTON (ADMIN / INVESTIGATOR / USER) */}
+          <button
+            type="button"
+            onClick={() => setShowGoogleModal(true)}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px 18px',
+              backgroundColor: '#ffffff',
+              color: '#111827',
+              border: '1px solid #e5e7eb',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              marginBottom: '16px',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <GoogleIcon size={20} />
+            <span>Sign In with Google (Admin / Staff / Citizen)</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 16px 0', gap: '12px' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>OR QUICK 1-CLICK ROLES</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+          </div>
+
+          {/* Quick Access Role Badges */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '20px' }}>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('admin@cybershield.org', 'Admin')}
+              disabled={loading}
+              style={{
+                padding: '8px 4px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '6px',
+                color: '#f87171',
+                cursor: 'pointer',
+                fontFamily: 'monospace',
+              }}
+            >
+              🛡️ Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('investigator@cybershield.org', 'Coordinator')}
+              disabled={loading}
+              style={{
+                padding: '8px 4px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                borderRadius: '6px',
+                color: '#fbbf24',
+                cursor: 'pointer',
+                fontFamily: 'monospace',
+              }}
+            >
+              🔍 Investigator
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('user@cybershield.org', 'User')}
+              disabled={loading}
+              style={{
+                padding: '8px 4px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                backgroundColor: 'rgba(6, 182, 212, 0.12)',
+                border: '1px solid rgba(6, 182, 212, 0.4)',
+                borderRadius: '6px',
+                color: '#38bdf8',
+                cursor: 'pointer',
+                fontFamily: 'monospace',
+              }}
+            >
+              👤 Citizen
+            </button>
           </div>
 
           {errorMsg && (
@@ -347,6 +561,13 @@ export const LoginPage = () => {
           </div>
         </div>
       )}
+
+      {/* Google SSO Modal */}
+      <GoogleAuthModal
+        isOpen={showGoogleModal}
+        onClose={() => setShowGoogleModal(false)}
+        mode="login"
+      />
     </div>
   );
 };

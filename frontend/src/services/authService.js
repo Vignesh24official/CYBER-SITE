@@ -9,6 +9,10 @@ export const authService = {
     return api.post('/auth/login', data);
   },
 
+  async googleAuth(data) {
+    return api.post('/auth/google', data);
+  },
+
   async logout(refreshToken) {
     return api.post('/auth/logout', { refreshToken });
   },

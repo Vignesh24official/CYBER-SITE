@@ -6,24 +6,47 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-darkest);
-  color: var(--text-primary);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+@media (pointer: fine) {
+  html, body, *, *::before, *::after, button, a, input, select, textarea {
+    cursor: none !important;
+  }
 }
 
-/* Monospace only for technical data, hashes, IPs, ports, CVEs, terminal, logs */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-darkest);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 242, 254, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 90% 60%, rgba(99, 102, 241, 0.05), transparent 70%),
+    radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.05), transparent 60%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Monospace fonts for telemetry, hashes, ports, CVEs, IPs, terminal */
 .font-mono, code, pre, .technical-data, .ip-address, .hash-val, .cve-tag {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -31,8 +54,8 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -59,20 +82,20 @@ button {
 
 /* Inputs & Form Controls */
 input, select, textarea {
-  font-family: inherit;
+  font-family: var(--font-body);
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   transition: var(--transition);
   width: 100%;
 }
 
 input:focus, select:focus, textarea:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px var(--accent-cyan-glow);
+  box-shadow: 0 0 0 2px var(--accent-cyan-glow), 0 0 12px rgba(0, 242, 254, 0.2);
   outline: none;
 }
 
@@ -80,67 +103,102 @@ input::placeholder, textarea::placeholder {
   color: var(--text-muted);
 }
 
-/* Buttons */
+/* Modern Cyber Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 10px 18px;
   border-radius: var(--radius-sm);
-  font-weight: 500;
-  font-size: 0.85rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
   transition: var(--transition);
   letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3);
+  background: linear-gradient(135deg, #00f2fe 0%, #0284c7 50%, #2563eb 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #020617;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 242, 254, 0.35);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
-  border-color: var(--accent-cyan-bright);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 242, 254, 0.55);
+  color: #000;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: rgba(13, 22, 42, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   color: var(--text-primary);
 }
 
 .btn-secondary:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-color-hover);
+  background: rgba(22, 36, 68, 0.85);
+  border-color: var(--accent-cyan-bright);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.btn-danger {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fb7185;
+}
+
+.btn-danger:hover {
+  background: rgba(244, 63, 94, 0.28);
+  transform: translateY(-2px);
 }
 
 .btn-emerald {
   background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.35);
   color: #34d399;
 }
 
 .btn-emerald:hover {
-  background: rgba(16, 185, 129, 0.25);
-}
-
-.btn-danger {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #f87171;
-}
-
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.22);
+  background: rgba(16, 185, 129, 0.28);
+  transform: translateY(-2px);
 }
 
 .btn-sm {
-  padding: 5px 10px;
-  font-size: 0.8rem;
+  padding: 6px 12px;
+  font-size: 0.825rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 1.05rem;
+  border-radius: var(--radius-md);
 }
 
 /* Glass & Graphite Cards */
@@ -150,40 +208,73 @@ input::placeholder, textarea::placeholder {
   -webkit-backdrop-filter: var(--glass-blur);
   border: var(--glass-border);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 24px;
   box-shadow: var(--shadow-card);
+  transition: var(--transition);
+}
+
+.card:hover {
+  border-color: var(--border-color-hover);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(0, 242, 254, 0.35);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .card-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+/* Cyber Shimmer Badge */
+.shimmer-badge {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  color: var(--accent-cyan-bright);
+  font-size: 0.775rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.15);
 }
 
 /* Severity Badges */
 .sev-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: 5px;
+  padding: 3px 10px;
   border-radius: 4px;
   font-size: 0.725rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
 }
 
 .sev-critical {
@@ -226,31 +317,41 @@ input::placeholder, textarea::placeholder {
 
 .status-dot-active {
   background-color: var(--accent-emerald);
-  box-shadow: 0 0 8px var(--accent-emerald);
+  box-shadow: 0 0 10px var(--accent-emerald);
   animation: pulse-glow 2s infinite;
 }
 
 .status-dot-critical {
-  background-color: var(--accent-rose);
-  box-shadow: 0 0 8px var(--accent-rose);
+  background-color: var(--accent-crimson);
+  box-shadow: 0 0 10px var(--accent-crimson);
   animation: pulse-glow-red 1.5s infinite;
 }
 
 .status-dot-warning {
   background-color: var(--accent-amber);
-  box-shadow: 0 0 8px var(--accent-amber);
+  box-shadow: 0 0 10px var(--accent-amber);
 }
 
 @keyframes pulse-glow {
   0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 0.4; transform: scale(0.9); }
   100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes pulse-glow-red {
   0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes radar-sweep-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ticker-slide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* Tables */
@@ -269,18 +370,19 @@ table {
 }
 
 th {
-  background-color: #0b0e17;
+  background-color: #070d1a;
   color: var(--text-secondary);
   font-weight: 600;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.05em;
+  font-family: var(--font-mono);
 }
 
 td {
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
 }
@@ -307,7 +409,7 @@ tr:hover td {
 }
 
 .page-body {
-  padding: 24px;
+  padding: 28px;
   flex: 1;
 }
 
@@ -315,25 +417,25 @@ tr:hover td {
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .grid-main-side {
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 16px;
+  gap: 20px;
 }
 
 @media (max-width: 1200px) {
@@ -353,6 +455,227 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
   .page-body {
-    padding: 14px;
+    padding: 16px;
   }
 }
+
+/* ========================================================================= */
+/* MOVING CYBER EFFECTS & KEYFRAME ANIMATIONS                               */
+/* ========================================================================= */
+
+/* Moving Horizontal Cyber Laser Scanner */
+.cyber-laser-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 242, 254, 0.4) 15%, #00f2fe 50%, rgba(56, 189, 248, 0.4) 85%, transparent 100%);
+  box-shadow: 0 0 15px #00f2fe, 0 0 30px rgba(0, 242, 254, 0.8), 0 0 50px rgba(0, 242, 254, 0.4);
+  pointer-events: none;
+  z-index: 4;
+  animation: cyber-laser-sweep 7s ease-in-out infinite;
+}
+
+@keyframes cyber-laser-sweep {
+  0% {
+    top: 2%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 2%;
+    opacity: 0;
+  }
+}
+
+/* Hologram Rotation Keyframes */
+@keyframes holo-rotate-cw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes holo-rotate-ccw {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* Sonar Shockwave Waves */
+@keyframes sonar-shockwave {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* Floating Levitations */
+.cyber-floating-1 {
+  animation: float-slow-1 4.5s ease-in-out infinite alternate;
+}
+
+.cyber-floating-2 {
+  animation: float-slow-2 5.5s ease-in-out infinite alternate;
+}
+
+@keyframes float-slow-1 {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-10px) rotate(1.5deg); }
+}
+
+@keyframes float-slow-2 {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(12px) rotate(-1.5deg); }
+}
+
+/* Traveling Border Beam on Cards */
+.cyber-border-beam {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-border-beam::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(transparent, transparent, transparent, #00f2fe, #38bdf8, transparent);
+  animation: rotate-border 6s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.cyber-border-beam:hover::before {
+  opacity: 0.75;
+}
+
+.cyber-border-beam > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes rotate-border {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Attack Pulse Flash */
+@keyframes attack-pulse-flash {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; filter: brightness(1.4); }
+  100% { opacity: 0.4; }
+}
+
+/* Cyber Shimmer Line */
+.shimmer-text {
+  background: linear-gradient(90deg, #ffffff 0%, #00f2fe 50%, #ffffff 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-shine 4s linear infinite;
+}
+
+@keyframes shimmer-shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* ========================================================================= */
+/* MILITARY-GRADE CYBER HUD CORNERS & CHAMFERED POLYGONS                    */
+/* ========================================================================= */
+
+.cyber-chamfer {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 18px) 0,
+    100% 18px,
+    100% 100%,
+    18px 100%,
+    0 calc(100% - 18px)
+  );
+}
+
+.cyber-hud-container {
+  position: relative;
+}
+
+.hud-corner-tl {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid #00f2fe;
+  border-left: 2px solid #00f2fe;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hud-corner-tr {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid #00f2fe;
+  border-right: 2px solid #00f2fe;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hud-corner-bl {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid #00f2fe;
+  border-left: 2px solid #00f2fe;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hud-corner-br {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid #00f2fe;
+  border-right: 2px solid #00f2fe;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cyber-badge-chamfer {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% 100%,
+    8px 100%,
+    0 calc(100% - 8px)
+  );
+}
+
+
