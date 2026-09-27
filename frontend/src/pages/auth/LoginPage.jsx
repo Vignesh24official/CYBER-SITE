@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Lock, Mail, Eye, EyeOff, CheckCircle, AlertCircle, ArrowRight, Activity, Terminal } from 'lucide-react';
+import { Shield, Lock, Mail, Eye, EyeOff, CheckCircle, AlertCircle, ArrowRight, Activity, Terminal, Key } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { CyberShieldSecurityPulse } from '../../components/common/CyberShieldSecurityPulse';
@@ -16,8 +16,11 @@ export const LoginPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [roleAuthPrompt, setRoleAuthPrompt] = useState(null);
 
-  const { login } = useAuth();
+  const passwordInputRef = useRef(null);
+
+  const { login, googleAuth } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
@@ -61,17 +64,31 @@ export const LoginPage = () => {
     }
   };
 
-  const handleQuickLogin = async (demoEmail, roleLabel) => {
+  const handleSelectRole = (demoEmail, roleLabel) => {
     setEmail(demoEmail);
-    setPassword('Password@123');
+    setPassword('');
+    setErrorMsg('');
+    if (roleAuthPrompt) setRoleAuthPrompt(null);
+    if (passwordInputRef.current) {
+      passwordInputRef.current.focus();
+    }
+    showSuccess(`Selected ${roleLabel} (${demoEmail}). Please enter your password or sign in with Google.`);
+  };
+
+  const handleRoleGoogleAuth = async (targetEmail, roleTitle) => {
     setErrorMsg('');
     setLoading(true);
-    setAuthStageText(`Authorizing ${roleLabel}...`);
+    setAuthStageText(`Authenticating ${roleTitle} via Google SSO...`);
 
     try {
-      await new Promise((r) => setTimeout(r, 300));
-      const authData = await login({ email: demoEmail, password: 'Password@123' });
-      showSuccess(`Authorized as ${roleLabel}!`);
+      await new Promise((r) => setTimeout(r, 400));
+      const authData = await googleAuth({
+        email: targetEmail,
+        name: roleTitle,
+        isSignUp: false,
+      });
+
+      showSuccess(`Authenticated via Google as ${roleTitle}!`);
 
       const role = authData?.role || authData?.user?.role;
       if (role === 'ROLE_ADMIN') {
@@ -84,10 +101,14 @@ export const LoginPage = () => {
     } catch (err) {
       setLoading(false);
       setAuthStageText('');
-      const msg = err?.response?.data?.message || err.message || 'Authentication error';
+      const msg = err?.response?.data?.message || err.message || 'Google authentication error';
       setErrorMsg(msg);
       showError(msg);
     }
+  };
+
+  const handleOpenRoleAuth = (roleInfo) => {
+    setRoleAuthPrompt(roleInfo);
   };
 
   return (
@@ -147,33 +168,33 @@ export const LoginPage = () => {
               Access your role-specific security console with end-to-end encrypted session authorization.
             </p>
 
-            {/* 3 DIRECT 1-CLICK ROLE ACCESS CARDS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* 3 PRE-CONFIGURED ENTERPRISE ROLES */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: 'var(--accent-cyan-bright)', letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase' }}>
-                ⚡ 1-Click Access to 3 Core Workspaces:
+                🛡️ Enterprise Role Consoles (Select to Authenticate):
               </div>
 
               {/* 1. ADMIN SOC CONSOLE */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@cybershield.org', 'SOC Administrator')}
-                disabled={loading}
+              <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
                   padding: '12px 16px',
                   backgroundColor: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid rgba(239, 68, 68, 0.35)',
-                  borderRadius: '10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
                   boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  onClick={() => handleOpenRoleAuth({ roleLabel: 'SOC Administrator', email: 'admin@cybershield.org', roleBadge: 'ROLE_ADMIN', color: '#ef4444', icon: Shield })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}
+                  title="Click to choose authentication method"
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Shield size={18} color="#f87171" />
                   </div>
                   <div>
@@ -181,33 +202,78 @@ export const LoginPage = () => {
                     <div style={{ fontSize: '0.7rem', color: '#fca5a5', fontFamily: 'monospace' }}>admin@cybershield.org</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#f87171', fontWeight: 700, fontFamily: 'monospace' }}>
-                  <span>LOGIN</span>
-                  <ArrowRight size={14} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleGoogleAuth('admin@cybershield.org', 'SOC Administrator')}
+                    disabled={loading}
+                    title="Sign In with Google Account"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '7px 11px',
+                      backgroundColor: '#ffffff',
+                      color: '#111827',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <GoogleIcon size={14} />
+                    <span>Google</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectRole('admin@cybershield.org', 'SOC Administrator')}
+                    disabled={loading}
+                    title="Enter Password to Authenticate"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '7px 11px',
+                      backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                      color: '#f87171',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    <Lock size={12} />
+                    <span>Password</span>
+                  </button>
                 </div>
-              </button>
+              </div>
 
               {/* 2. INVESTIGATOR / COORDINATOR WORKBENCH */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('investigator@cybershield.org', 'Lead Investigator')}
-                disabled={loading}
+              <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
                   padding: '12px 16px',
                   backgroundColor: 'rgba(245, 158, 11, 0.08)',
                   border: '1px solid rgba(245, 158, 11, 0.35)',
-                  borderRadius: '10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
                   boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  onClick={() => handleOpenRoleAuth({ roleLabel: 'Lead Investigator', email: 'investigator@cybershield.org', roleBadge: 'ROLE_INVESTIGATOR', color: '#fbbf24', icon: Terminal })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}
+                  title="Click to choose authentication method"
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Terminal size={18} color="#fbbf24" />
                   </div>
                   <div>
@@ -215,33 +281,78 @@ export const LoginPage = () => {
                     <div style={{ fontSize: '0.7rem', color: '#fcd34d', fontFamily: 'monospace' }}>investigator@cybershield.org</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#fbbf24', fontWeight: 700, fontFamily: 'monospace' }}>
-                  <span>LOGIN</span>
-                  <ArrowRight size={14} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleGoogleAuth('investigator@cybershield.org', 'Lead Investigator')}
+                    disabled={loading}
+                    title="Sign In with Google Account"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '7px 11px',
+                      backgroundColor: '#ffffff',
+                      color: '#111827',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <GoogleIcon size={14} />
+                    <span>Google</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectRole('investigator@cybershield.org', 'Lead Investigator')}
+                    disabled={loading}
+                    title="Enter Password to Authenticate"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '7px 11px',
+                      backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                      color: '#fbbf24',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    <Lock size={12} />
+                    <span>Password</span>
+                  </button>
                 </div>
-              </button>
+              </div>
 
               {/* 3. CITIZEN / USER DEFENSE WORKSPACE */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('user@cybershield.org', 'Citizen Reporter')}
-                disabled={loading}
+              <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
                   padding: '12px 16px',
                   backgroundColor: 'rgba(6, 182, 212, 0.08)',
                   border: '1px solid rgba(6, 182, 212, 0.35)',
-                  borderRadius: '10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
                   boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: 'rgba(6, 182, 212, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  onClick={() => handleOpenRoleAuth({ roleLabel: 'Citizen Reporter', email: 'user@cybershield.org', roleBadge: 'ROLE_USER', color: '#38bdf8', icon: CheckCircle })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}
+                  title="Click to choose authentication method"
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'rgba(6, 182, 212, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <CheckCircle size={18} color="#38bdf8" />
                   </div>
                   <div>
@@ -249,17 +360,62 @@ export const LoginPage = () => {
                     <div style={{ fontSize: '0.7rem', color: '#7dd3fc', fontFamily: 'monospace' }}>user@cybershield.org</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 700, fontFamily: 'monospace' }}>
-                  <span>LOGIN</span>
-                  <ArrowRight size={14} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleGoogleAuth('user@cybershield.org', 'Citizen Reporter')}
+                    disabled={loading}
+                    title="Sign In with Google Account"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '7px 11px',
+                      backgroundColor: '#ffffff',
+                      color: '#111827',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <GoogleIcon size={14} />
+                    <span>Google</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectRole('user@cybershield.org', 'Citizen Reporter')}
+                    disabled={loading}
+                    title="Enter Password to Authenticate"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '7px 11px',
+                      backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                      color: '#38bdf8',
+                      border: '1px solid rgba(6, 182, 212, 0.4)',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    <Lock size={12} />
+                    <span>Password</span>
+                  </button>
                 </div>
-              </button>
+              </div>
             </div>
           </div>
 
           <div style={{ marginTop: '24px', pt: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-              SEED PASSWORD FOR ALL 3: <strong style={{ color: 'var(--accent-amber)' }}>Password@123</strong>
+              SEED PASSWORD FOR TESTING: <strong style={{ color: 'var(--accent-amber)' }}>Password@123</strong> (OR USE GOOGLE SSO)
             </div>
           </div>
         </div>
@@ -305,16 +461,17 @@ export const LoginPage = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 16px 0', gap: '12px' }}>
             <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>OR QUICK 1-CLICK ROLES</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>OR SELECT ROLE TO AUTHENTICATE</span>
             <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
           </div>
 
-          {/* Quick Access Role Badges */}
+          {/* Quick Access Role Badges (Click to populate email & enter password) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '20px' }}>
             <button
               type="button"
-              onClick={() => handleQuickLogin('admin@cybershield.org', 'Admin')}
+              onClick={() => handleSelectRole('admin@cybershield.org', 'Admin')}
               disabled={loading}
+              title="Click to select Admin account"
               style={{
                 padding: '8px 4px',
                 fontSize: '0.75rem',
@@ -331,8 +488,9 @@ export const LoginPage = () => {
             </button>
             <button
               type="button"
-              onClick={() => handleQuickLogin('investigator@cybershield.org', 'Coordinator')}
+              onClick={() => handleSelectRole('investigator@cybershield.org', 'Investigator')}
               disabled={loading}
+              title="Click to select Investigator account"
               style={{
                 padding: '8px 4px',
                 fontSize: '0.75rem',
@@ -349,8 +507,9 @@ export const LoginPage = () => {
             </button>
             <button
               type="button"
-              onClick={() => handleQuickLogin('user@cybershield.org', 'User')}
+              onClick={() => handleSelectRole('user@cybershield.org', 'Citizen')}
               disabled={loading}
+              title="Click to select Citizen account"
               style={{
                 padding: '8px 4px',
                 fontSize: '0.75rem',
@@ -432,6 +591,7 @@ export const LoginPage = () => {
               <div style={{ position: 'relative' }}>
                 <Lock size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
+                  ref={passwordInputRef}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -568,6 +728,132 @@ export const LoginPage = () => {
         onClose={() => setShowGoogleModal(false)}
         mode="login"
       />
+
+      {/* Role Authentication Choice Dialog */}
+      {roleAuthPrompt && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(3, 7, 18, 0.85)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+          onClick={() => setRoleAuthPrompt(null)}
+        >
+          <div
+            style={{
+              backgroundColor: '#0c1017',
+              border: `1px solid ${roleAuthPrompt.color || 'var(--accent-cyan-bright)'}`,
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '460px',
+              width: '100%',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  backgroundColor: `${roleAuthPrompt.color || '#06b6d4'}22`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <roleAuthPrompt.icon size={22} color={roleAuthPrompt.color || '#06b6d4'} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF', margin: 0 }}>
+                  {roleAuthPrompt.roleLabel}
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: roleAuthPrompt.color || 'var(--accent-cyan-bright)', fontFamily: 'monospace' }}>
+                  {roleAuthPrompt.email}
+                </span>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '22px', lineHeight: 1.5 }}>
+              Choose your authentication method to verify identity for the <strong>{roleAuthPrompt.roleLabel}</strong> workspace:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Method 1: Google SSO */}
+              <button
+                type="button"
+                onClick={() => {
+                  const targetEmail = roleAuthPrompt.email;
+                  const targetLabel = roleAuthPrompt.roleLabel;
+                  setRoleAuthPrompt(null);
+                  handleRoleGoogleAuth(targetEmail, targetLabel);
+                }}
+                disabled={loading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '13px 18px',
+                  backgroundColor: '#ffffff',
+                  color: '#111827',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                }}
+              >
+                <GoogleIcon size={20} />
+                <span>Authenticate with Google Account</span>
+              </button>
+
+              {/* Method 2: Enter Password */}
+              <button
+                type="button"
+                onClick={() => handleSelectRole(roleAuthPrompt.email, roleAuthPrompt.roleLabel)}
+                disabled={loading}
+                className="btn btn-secondary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  padding: '13px 18px',
+                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                }}
+              >
+                <Lock size={18} />
+                <span>Enter Account Password Manually</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRoleAuthPrompt(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.8rem',
+                  marginTop: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
