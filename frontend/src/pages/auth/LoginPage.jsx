@@ -112,41 +112,10 @@ export const LoginPage = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: 'calc(100vh - 120px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        backgroundColor: 'var(--bg-darkest)',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '1080px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: '16px',
-          border: '1px solid var(--border-color)',
-          overflow: 'hidden',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
-        }}
-      >
+    <div className="auth-page-wrapper">
+      <div className="auth-grid-container">
         {/* LEFT PANEL: CYBERSHIELD IDENTITY & 3 INTERACTIVE ROLE LOGINS */}
-        <div
-          style={{
-            padding: '48px 36px',
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(7, 9, 14, 0.95) 100%)',
-            borderRight: '1px solid var(--border-color)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            position: 'relative',
-          }}
-        >
+        <div className="auth-panel-left">
           <div>
             <div style={{ marginBottom: '24px' }}>
               <CyberShieldSecurityPulse statusText="PORTAL SECURITY ACTIVE" />
@@ -176,17 +145,10 @@ export const LoginPage = () => {
 
               {/* 1. ADMIN SOC CONSOLE */}
               <div
+                className="cyber-role-card"
                 style={{
-                  padding: '12px 16px',
                   backgroundColor: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid rgba(239, 68, 68, 0.35)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '10px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                  transition: 'all 0.2s ease',
                 }}
               >
                 <div
@@ -203,7 +165,7 @@ export const LoginPage = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="cyber-role-card-actions">
                   <button
                     type="button"
                     onClick={() => handleRoleGoogleAuth('admin@cybershield.org', 'SOC Administrator')}
@@ -255,17 +217,10 @@ export const LoginPage = () => {
 
               {/* 2. INVESTIGATOR / COORDINATOR WORKBENCH */}
               <div
+                className="cyber-role-card"
                 style={{
-                  padding: '12px 16px',
                   backgroundColor: 'rgba(245, 158, 11, 0.08)',
                   border: '1px solid rgba(245, 158, 11, 0.35)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '10px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                  transition: 'all 0.2s ease',
                 }}
               >
                 <div
@@ -282,7 +237,7 @@ export const LoginPage = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="cyber-role-card-actions">
                   <button
                     type="button"
                     onClick={() => handleRoleGoogleAuth('investigator@cybershield.org', 'Lead Investigator')}
@@ -334,17 +289,10 @@ export const LoginPage = () => {
 
               {/* 3. CITIZEN / USER DEFENSE WORKSPACE */}
               <div
+                className="cyber-role-card"
                 style={{
-                  padding: '12px 16px',
                   backgroundColor: 'rgba(6, 182, 212, 0.08)',
                   border: '1px solid rgba(6, 182, 212, 0.35)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '10px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                  transition: 'all 0.2s ease',
                 }}
               >
                 <div
@@ -361,7 +309,7 @@ export const LoginPage = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="cyber-role-card-actions">
                   <button
                     type="button"
                     onClick={() => handleRoleGoogleAuth('user@cybershield.org', 'Citizen Reporter')}
@@ -421,7 +369,7 @@ export const LoginPage = () => {
         </div>
 
         {/* RIGHT PANEL: AUTHENTICATION FORM */}
-        <div style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="auth-panel-right">
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>
               Sign In to CyberShield

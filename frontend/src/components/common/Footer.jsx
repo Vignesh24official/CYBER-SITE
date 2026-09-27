@@ -22,7 +22,7 @@ export const Footer = () => {
           top: 0,
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '600px',
+          width: 'min(600px, 90vw)',
           height: '1px',
           background: 'linear-gradient(90deg, transparent 0%, rgba(0, 242, 254, 0.6) 50%, transparent 100%)',
           boxShadow: '0 0 20px rgba(0, 242, 254, 0.5)',
@@ -97,13 +97,7 @@ export const Footer = () => {
         </div>
 
         {/* 4 Multi-Column Navigation */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '36px',
-          }}
-        >
+        <div className="footer-nav-grid">
           {/* Column 1: Platform & SOC */}
           <div>
             <div style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', marginBottom: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>

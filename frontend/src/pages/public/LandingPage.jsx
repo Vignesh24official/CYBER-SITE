@@ -403,7 +403,7 @@ export const LandingPage = () => {
             maxWidth: '1280px', 
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
             alignItems: 'center',
             gap: '48px',
           }}
@@ -465,7 +465,7 @@ export const LandingPage = () => {
             </div>
 
             {/* Action Buttons & Unexpected Attack Simulator Trigger */}
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="hero-cta-group" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
               <Link
                 to="/report"
                 className="btn btn-primary btn-lg"
@@ -1427,7 +1427,7 @@ export const LandingPage = () => {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '28px', alignItems: 'stretch' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '28px', alignItems: 'stretch' }}>
           {/* Left: Interactive Live Terminal Widget */}
           <div className="cyber-hud-container">
             <div className="hud-corner-tl" />
@@ -1565,7 +1565,7 @@ export const LandingPage = () => {
             className="cyber-border-beam"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
               gap: '32px',
               backgroundColor: 'rgba(11, 19, 36, 0.85)',
               borderRadius: '16px',

@@ -91,27 +91,8 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: 'calc(100vh - 120px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        backgroundColor: 'var(--bg-darkest)',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '680px',
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: '16px',
-          border: '1px solid var(--border-color)',
-          padding: '40px',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
-        }}
-      >
+    <div className="auth-page-wrapper">
+      <div className="register-card-container">
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ marginBottom: '16px' }}>
             <CyberShieldSecurityPulse statusText="NEW CITIZEN / USER REGISTRATION" />
@@ -211,7 +192,7 @@ export const RegisterPage = () => {
           </div>
 
           {/* Email & Phone */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+          <div className="form-grid-pair">
             <div>
               <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
                 Email Address
@@ -266,7 +247,7 @@ export const RegisterPage = () => {
           </div>
 
           {/* Password & Confirm Password */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+          <div className="form-grid-pair">
             <div>
               <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
                 Password

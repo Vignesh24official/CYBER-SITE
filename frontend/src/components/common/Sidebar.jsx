@@ -50,6 +50,7 @@ export const Sidebar = ({ type = 'admin' }) => {
 
   return (
     <aside
+      className="app-sidebar"
       style={{
         width: 'var(--sidebar-width)',
         backgroundColor: '#0b0e17',
