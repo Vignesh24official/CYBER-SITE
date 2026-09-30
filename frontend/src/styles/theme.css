@@ -4,23 +4,26 @@
   --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
-  /* Color Palette - Ultra-Modern Deep Obsidian & Cyber Intelligence Theme */
-  --bg-darkest: #040711;
-  --bg-dark: #070d1c;
-  --bg-dark-secondary: #0a1226;
-  --bg-card: rgba(11, 19, 36, 0.75);
-  --bg-card-solid: #0d172e;
-  --bg-card-hover: rgba(18, 30, 56, 0.85);
-  --bg-input: #080e1e;
-  --border-color: rgba(56, 189, 248, 0.12);
-  --border-color-hover: rgba(56, 189, 248, 0.32);
-  --border-focus: #00f2fe;
+  /* Color Palette - Sinister Red & Electric Blue Scary Hacker Theme */
+  --bg-darkest: #020408;
+  --bg-dark: #050811;
+  --bg-dark-secondary: #080d1b;
+  --bg-card: rgba(6, 10, 20, 0.84);
+  --bg-card-solid: #070c1a;
+  --bg-card-hover: rgba(12, 17, 32, 0.94);
+  --bg-input: #040710;
+  --border-color: rgba(0, 240, 255, 0.18);
+  --border-color-hover: rgba(255, 0, 60, 0.55);
+  --border-focus: #00f0ff;
+  --border-red: rgba(255, 0, 60, 0.45);
+  --border-blue: rgba(0, 240, 255, 0.45);
 
   /* Glassmorphism Tokens */
-  --glass-bg: rgba(11, 19, 36, 0.78);
+  --glass-bg: rgba(6, 10, 20, 0.86);
   --glass-blur: blur(16px);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.09);
-  --glass-border-cyan: 1px solid rgba(0, 242, 254, 0.22);
+  --glass-border: 1px solid rgba(0, 240, 255, 0.2);
+  --glass-border-cyan: 1px solid rgba(0, 240, 255, 0.35);
+  --glass-border-red: 1px solid rgba(255, 0, 60, 0.45);
 
   /* Typography Colors */
   --text-primary: #f8fafc;
@@ -29,46 +32,52 @@
   --text-dim: #475569;
   --text-inverse: #020617;
 
-  /* Radiant Accents & Luminous Glows */
-  --accent-cyan: #00f2fe;
+  /* Dual Red & Blue Accents - High Voltage Cyber Warfare */
+  --accent-cyan: #00f0ff;
   --accent-cyan-bright: #38bdf8;
-  --accent-cyan-glow: rgba(0, 242, 254, 0.25);
-  --accent-blue: #3b82f6;
+  --accent-cyan-glow: rgba(0, 240, 255, 0.35);
+  --accent-blue: #0066ff;
   --accent-blue-bright: #60a5fa;
-  --accent-blue-glow: rgba(59, 130, 246, 0.25);
-  --accent-indigo: #6366f1;
-  --accent-purple: #a855f7;
-  --accent-purple-glow: rgba(168, 85, 247, 0.25);
+  --accent-blue-glow: rgba(0, 102, 255, 0.35);
+  --accent-indigo: #4f46e5;
+  --accent-purple: #9333ea;
+  --accent-purple-glow: rgba(147, 51, 234, 0.25);
+
+  /* Scary Threat Crimson / Blood Red */
+  --accent-crimson: #ff003c;
+  --accent-red: #ff1744;
+  --accent-rose: #ff003c;
+  --accent-rose-glow: rgba(255, 0, 60, 0.45);
+  --accent-blood: #dc2626;
+  --accent-danger: #ff003c;
+
   --accent-emerald: #10b981;
   --accent-emerald-bright: #34d399;
   --accent-emerald-glow: rgba(16, 185, 129, 0.25);
   --accent-amber: #f59e0b;
   --accent-amber-glow: rgba(245, 158, 11, 0.25);
   --accent-orange: #f97316;
-  --accent-rose: #ef4444;
-  --accent-crimson: #f43f5e;
-  --accent-rose-glow: rgba(239, 68, 68, 0.25);
 
   /* Severity Badges */
-  --sev-critical-bg: rgba(244, 63, 94, 0.12);
-  --sev-critical-border: rgba(244, 63, 94, 0.35);
-  --sev-critical-text: #fb7185;
+  --sev-critical-bg: rgba(255, 0, 60, 0.16);
+  --sev-critical-border: rgba(255, 0, 60, 0.6);
+  --sev-critical-text: #ff3366;
 
-  --sev-high-bg: rgba(249, 115, 22, 0.12);
-  --sev-high-border: rgba(249, 115, 22, 0.35);
+  --sev-high-bg: rgba(249, 115, 22, 0.14);
+  --sev-high-border: rgba(249, 115, 22, 0.45);
   --sev-high-text: #fb923c;
 
   --sev-medium-bg: rgba(245, 158, 11, 0.12);
   --sev-medium-border: rgba(245, 158, 11, 0.35);
   --sev-medium-text: #fbbf24;
 
-  --sev-low-bg: rgba(59, 130, 246, 0.12);
-  --sev-low-border: rgba(59, 130, 246, 0.35);
-  --sev-low-text: #60a5fa;
+  --sev-low-bg: rgba(0, 240, 255, 0.12);
+  --sev-low-border: rgba(0, 240, 255, 0.4);
+  --sev-low-text: #38bdf8;
 
-  --sev-info-bg: rgba(148, 163, 184, 0.12);
-  --sev-info-border: rgba(148, 163, 184, 0.3);
-  --sev-info-text: #94a3b8;
+  --sev-info-bg: rgba(0, 102, 255, 0.12);
+  --sev-info-border: rgba(0, 102, 255, 0.35);
+  --sev-info-text: #60a5fa;
 
   /* Layout Dimensions */
   --header-height: 72px;
@@ -84,9 +93,11 @@
   --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Shadows & Neon Radiance */
-  --shadow-card: 0 12px 36px -8px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --shadow-card-hover: 0 20px 48px -10px rgba(0, 0, 0, 0.85), 0 0 24px 0 rgba(0, 242, 254, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  --shadow-glow: 0 0 30px -4px rgba(0, 242, 254, 0.3);
-  --shadow-glow-blue: 0 0 30px -4px rgba(59, 130, 246, 0.35);
+  /* Shadows & Sinister Neon Dual Radiance */
+  --shadow-card: 0 12px 36px -8px rgba(0, 0, 0, 0.85), 0 0 1px 1px rgba(255, 0, 60, 0.18), inset 0 1px 0 rgba(0, 240, 255, 0.18);
+  --shadow-card-hover: 0 20px 48px -10px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 0, 60, 0.3), 0 0 45px rgba(0, 240, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --shadow-glow: 0 0 30px -4px rgba(0, 240, 255, 0.45);
+  --shadow-glow-blue: 0 0 30px -4px rgba(0, 102, 255, 0.45);
+  --shadow-glow-red: 0 0 35px -2px rgba(255, 0, 60, 0.6);
+  --shadow-glow-dual: 0 0 20px rgba(255, 0, 60, 0.4), 0 0 40px rgba(0, 240, 255, 0.3);
 }

@@ -20,6 +20,7 @@ import { NotFoundPage } from '../pages/public/NotFoundPage';
 // Auth Pages
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
+import { AuthCallbackPage } from '../pages/auth/AuthCallbackPage';
 
 // User Pages
 import { UserDashboardPage } from '../pages/user/UserDashboardPage';
@@ -67,6 +68,7 @@ export const AppRoutes = () => {
         <Route path="/safety/:slug" element={<ArticleDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
       </Route>
 
       {/* Normal User Routes */}

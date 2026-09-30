@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const CyberShieldSecurityPulse = ({ statusText = "DEFENSE GRID ACTIVE", compact = false }) => {
+export const CyberShieldSecurityPulse = ({ statusText = "HACKER PORTAL // ACTIVE BREACH MONITOR", compact = false, threat = true }) => {
   return (
     <div
       style={{
@@ -8,10 +8,11 @@ export const CyberShieldSecurityPulse = ({ statusText = "DEFENSE GRID ACTIVE", c
         alignItems: 'center',
         gap: compact ? '6px' : '10px',
         padding: compact ? '4px 10px' : '6px 14px',
-        backgroundColor: 'rgba(6, 182, 212, 0.08)',
-        border: '1px solid rgba(6, 182, 212, 0.25)',
+        backgroundColor: threat ? 'rgba(255, 0, 60, 0.12)' : 'rgba(0, 240, 255, 0.08)',
+        border: threat ? '1px solid rgba(255, 0, 60, 0.45)' : '1px solid rgba(0, 240, 255, 0.25)',
         borderRadius: '9999px',
         backdropFilter: 'blur(8px)',
+        boxShadow: threat ? '0 0 18px rgba(255, 0, 60, 0.25)' : '0 0 15px rgba(0, 240, 255, 0.2)',
       }}
     >
       <div
@@ -20,8 +21,8 @@ export const CyberShieldSecurityPulse = ({ statusText = "DEFENSE GRID ACTIVE", c
           width: compact ? '8px' : '10px',
           height: compact ? '8px' : '10px',
           borderRadius: '50%',
-          backgroundColor: '#06b6d4',
-          boxShadow: '0 0 10px #06b6d4',
+          backgroundColor: threat ? '#ff003c' : '#00f0ff',
+          boxShadow: threat ? '0 0 12px #ff003c' : '0 0 12px #00f0ff',
         }}
       >
         <div
@@ -32,9 +33,9 @@ export const CyberShieldSecurityPulse = ({ statusText = "DEFENSE GRID ACTIVE", c
             width: '100%',
             height: '100%',
             borderRadius: '50%',
-            backgroundColor: '#06b6d4',
-            animation: 'ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite',
-            opacity: 0.75,
+            backgroundColor: threat ? '#ff003c' : '#00f0ff',
+            animation: 'hacker-pulse-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+            opacity: 0.85,
           }}
         />
       </div>
@@ -42,21 +43,22 @@ export const CyberShieldSecurityPulse = ({ statusText = "DEFENSE GRID ACTIVE", c
       <span
         style={{
           fontSize: compact ? '0.7rem' : '0.775rem',
-          fontWeight: 700,
-          color: '#38bdf8',
-          letterSpacing: '0.08em',
+          fontWeight: 800,
+          color: threat ? '#ff4d6d' : '#38bdf8',
+          letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          fontFamily: 'monospace',
+          fontFamily: 'var(--font-mono), monospace',
           whiteSpace: 'nowrap',
+          textShadow: threat ? '0 0 8px rgba(255, 0, 60, 0.5)' : '0 0 8px rgba(0, 240, 255, 0.5)',
         }}
       >
         {statusText}
       </span>
 
       <style>{`
-        @keyframes ping {
+        @keyframes hacker-pulse-ping {
           75%, 100% {
-            transform: scale(2.2);
+            transform: scale(2.4);
             opacity: 0;
           }
         }

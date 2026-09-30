@@ -48,4 +48,19 @@ class ThreatAnalysisServiceTest {
         assertTrue(response.isHttps());
         assertEquals(ThreatSeverity.LOW, response.getRiskLevel());
     }
+
+    @Test
+    @DisplayName("Should detect high/critical risk when illegal adversary keywords are present")
+    void analyzeUrl_IllegalKeywords_HighOrCriticalRisk() {
+        UrlAnalysisRequest request = UrlAnalysisRequest.builder()
+                .url("http://compromised-host.xyz/download/ransomware-lockbit-hack")
+                .build();
+
+        UrlAnalysisResponse response = threatAnalysisService.analyzeUrl(request);
+
+        assertNotNull(response);
+        assertTrue(response.getRiskScore() >= 80, "Expected risk score >= 80 but was " + response.getRiskScore());
+        assertEquals(ThreatSeverity.CRITICAL, response.getRiskLevel());
+        assertTrue(response.getFindings().stream().anyMatch(f -> f.contains("ransomware") || f.contains("hack")));
+    }
 }

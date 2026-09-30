@@ -18,7 +18,8 @@ import {
   Clock,
   Compass,
   Menu,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { NotificationBell } from '../notifications/NotificationBell';
@@ -34,6 +35,48 @@ export const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [utcTime, setUtcTime] = useState('');
+  const [justBreached, setJustBreached] = useState(false);
+  const [portalBreached, setPortalBreached] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    if (location.pathname !== '/') return true;
+    try {
+      const navEntry = window.performance?.getEntriesByType?.('navigation')?.[0];
+      const isReload = navEntry ? navEntry.type === 'reload' : window.performance?.navigation?.type === 1;
+      if (isReload) return false;
+      return sessionStorage.getItem('cybershield_portal_breached') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const onBreach = () => {
+      setPortalBreached(true);
+      setJustBreached(true);
+    };
+    const onReopen = () => {
+      try {
+        localStorage.removeItem('cybershield_portal_breached');
+        sessionStorage.removeItem('cybershield_portal_breached');
+      } catch (e) {
+        console.error(e);
+      }
+      setPortalBreached(false);
+      setJustBreached(false);
+    };
+    window.addEventListener('cybershield-portal-breached', onBreach);
+    window.addEventListener('cybershield-reopen-portal', onReopen);
+    return () => {
+      window.removeEventListener('cybershield-portal-breached', onBreach);
+      window.removeEventListener('cybershield-reopen-portal', onReopen);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (location.pathname !== '/') {
+      setPortalBreached(true);
+    }
+  }, [location.pathname]);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -84,13 +127,13 @@ export const Header = () => {
   const isPublicPage = location.pathname === '/' || location.pathname.startsWith('/safety');
 
   return (
-    <>
-      {/* TACTICAL TOP TELEMETRY RIBBON */}
+    <div className={justBreached ? 'portal-header-slide' : ''}>
+      {/* TACTICAL TOP TELEMETRY RIBBON - SCARY HACKER WARFARE */}
       <div
         className="telemetry-ribbon"
         style={{
-          backgroundColor: '#020409',
-          borderBottom: '1px solid rgba(56, 189, 248, 0.12)',
+          backgroundColor: '#020307',
+          borderBottom: '1px solid rgba(255, 0, 60, 0.35)',
           padding: '4px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -100,21 +143,28 @@ export const Header = () => {
           color: 'var(--text-muted)',
           zIndex: 101,
           position: 'relative',
+          boxShadow: '0 0 20px rgba(255, 0, 60, 0.15)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Clock size={11} color="var(--accent-cyan)" />
+            <Clock size={11} color="#00f0ff" />
             <span>ZULU: <strong style={{ color: '#f8fafc' }}>{utcTime}</strong></span>
           </div>
 
-          <div style={{ display: 'none', alignItems: 'center', gap: '6px' }} className="ribbon-geo">
-            <Compass size={11} color="#34d399" />
-            <span>GEO: <strong style={{ color: '#94a3b8' }}>37.77° N, 122.41° W</strong></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="ribbon-defcon">
+            <AlertTriangle size={11} color="#ff003c" />
+            <span>DEFCON: <strong style={{ color: '#ff003c', textShadow: '0 0 8px #ff003c', animation: 'pulse-glow-red 1.2s infinite' }}>1 [OMEGA INTRUSION]</strong></span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="ribbon-defcon">
-            <span>DEFCON: <strong style={{ color: '#fbbf24' }}>2 [GUARDED]</strong></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="ribbon-geo">
+            <Radio size={11} color="#00f0ff" />
+            <span>RED CELL: <strong style={{ color: '#ff4d6d' }}>ACTIVE</strong> // BLUE SHIELD: <strong style={{ color: '#00f0ff' }}>ENGAGED</strong></span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="ribbon-dlp">
+            <Lock size={11} color="#ff003c" />
+            <span>DLP: <strong style={{ color: '#ff003c', letterSpacing: '0.5px' }}>COPY/PASTE/SCREENSHOT LOCKED</strong></span>
           </div>
         </div>
 
@@ -123,11 +173,50 @@ export const Header = () => {
           <button
             onClick={toggleSound}
             style={{
-              background: soundEnabled ? 'rgba(0, 242, 254, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-              border: soundEnabled ? '1px solid rgba(0, 242, 254, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+              background: soundEnabled ? 'rgba(255, 0, 60, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+              border: soundEnabled ? '1px solid #ff003c' : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '4px',
               padding: '2px 8px',
-              color: soundEnabled ? '#00f2fe' : 'var(--text-muted)',
+              color: soundEnabled ? '#ff4d6d' : 'var(--text-muted)',
+              fontSize: '0.66rem',
+              fontFamily: 'inherit',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.15s ease',
+              boxShadow: soundEnabled ? '0 0 10px rgba(255, 0, 60, 0.4)' : 'none',
+            }}
+            title="Toggle synthesized HUD audio effects"
+          >
+            {soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+            <span>SFX: {soundEnabled ? 'ARMED' : 'MUTED'}</span>
+          </button>
+
+          {/* Re-enter Portal Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.playClick();
+              try {
+                localStorage.removeItem('cybershield_portal_breached');
+                sessionStorage.removeItem('cybershield_portal_breached');
+              } catch (e) {
+                console.error(e);
+              }
+              if (location.pathname !== '/') {
+                navigate('/');
+              }
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('cybershield-reopen-portal'));
+              }, 50);
+            }}
+            style={{
+              background: 'rgba(255, 0, 60, 0.15)',
+              border: '1px solid rgba(255, 0, 60, 0.4)',
+              borderRadius: '4px',
+              padding: '2px 8px',
+              color: '#ff4d6d',
               fontSize: '0.66rem',
               fontFamily: 'inherit',
               cursor: 'pointer',
@@ -136,223 +225,229 @@ export const Header = () => {
               gap: '5px',
               transition: 'all 0.15s ease',
             }}
-            title="Toggle synthesized HUD audio effects"
+            title="Re-open the Scary Cyber Entry Portal"
           >
-            {soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
-            <span>SFX: {soundEnabled ? 'ON' : 'OFF'}</span>
+            <ShieldAlert size={12} color="#ff003c" />
+            <span>PORTAL GATEWAY</span>
           </button>
 
-          <span className="ribbon-grid-ver" style={{ color: 'var(--accent-cyan-bright)' }}>GRID 4.12</span>
+          <span className="ribbon-grid-ver" style={{ color: '#00f0ff', fontFamily: 'monospace', fontWeight: 700 }}>WARFARE_GRID_v2.0</span>
         </div>
       </div>
 
       <header
         style={{
-          height: 'var(--header-height)',
-          backgroundColor: scrolled ? 'rgba(4, 7, 17, 0.94)' : 'rgba(7, 13, 28, 0.88)',
+          height: 'var(--header-height, 68px)',
+          backgroundColor: scrolled ? 'rgba(3, 5, 12, 0.96)' : 'rgba(5, 8, 18, 0.94)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: scrolled ? '1px solid rgba(0, 242, 254, 0.25)' : '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: '1px solid rgba(255, 0, 60, 0.35)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 28px',
+          padding: '0 24px',
           position: 'sticky',
           top: 0,
           zIndex: 100,
           transition: 'all 0.3s ease',
-          boxShadow: scrolled ? '0 10px 30px -10px rgba(0,0,0,0.85)' : 'none',
+          boxShadow: '0 10px 35px -10px rgba(0,0,0,0.9), 0 0 25px rgba(255, 0, 60, 0.15)',
         }}
       >
-        {/* Brand Logo & Telemetry Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
-          <Link 
-            to="/" 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
-              textDecoration: 'none',
-              position: 'relative'
+        {/* LEFT: Compact Cyber Logo Anchor */}
+        <Link 
+          to="/" 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px', 
+            textDecoration: 'none',
+            flexShrink: 0,
+          }}
+          onMouseEnter={() => cyberAudio.playHover()}
+          onClick={() => cyberAudio.playClick()}
+        >
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, rgba(255, 0, 60, 0.35) 0%, rgba(8, 12, 24, 0.95) 50%, rgba(0, 240, 255, 0.3) 100%)',
+              border: '1.5px solid #ff003c',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 16px rgba(255, 0, 60, 0.5)',
+              flexShrink: 0,
             }}
-            onMouseEnter={() => cyberAudio.playHover()}
-            onClick={() => cyberAudio.playClick()}
           >
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.22) 0%, rgba(37, 99, 235, 0.25) 100%)',
-                border: '1px solid rgba(0, 242, 254, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 18px rgba(0, 242, 254, 0.3)',
-              }}
-            >
-              <Shield size={22} color="#00f2fe" />
-            </div>
+            <Shield size={20} color="#ff003c" style={{ filter: 'drop-shadow(0 0 6px #ff003c)' }} />
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span 
                 style={{ 
                   fontWeight: 900, 
-                  fontSize: '1.25rem', 
+                  fontSize: '1.2rem', 
                   letterSpacing: '-0.02em', 
                   fontFamily: 'var(--font-heading)',
                   color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '2px'
+                  whiteSpace: 'nowrap',
                 }}
               >
-                CYBER<span style={{ color: 'var(--accent-cyan)', textShadow: '0 0 12px rgba(0, 242, 254, 0.6)' }}>SHIELD</span>
+                CYBER<span style={{ color: '#ff003c', textShadow: '0 0 10px #ff003c' }}>SHIELD</span>
               </span>
               <span 
-                className="brand-sub-title"
                 style={{ 
-                  fontSize: '0.62rem', 
-                  color: 'var(--text-muted)', 
-                  letterSpacing: '0.14em', 
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 600,
-                  marginTop: '-3px'
+                  fontSize: '0.6rem', 
+                  color: '#00f0ff', 
+                  border: '1px solid rgba(0, 240, 255, 0.4)', 
+                  backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                  borderRadius: '4px', 
+                  padding: '1px 5px', 
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                SOC THREAT INTELLIGENCE
+                PORTAL
               </span>
             </div>
-          </Link>
+            <span 
+              className="brand-sub-title"
+              style={{ 
+                fontSize: '0.6rem', 
+                color: '#ff4d6d', 
+                letterSpacing: '0.12em', 
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
+                marginTop: '-2px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              RED // BLUE SOC
+            </span>
+          </div>
+        </Link>
 
-          {/* Grid Status Beacon */}
-          <div
-            className="beacon-status-chip"
+        {/* CENTER: Clean, Non-wrapping Public Navigation Links */}
+        {isPublicPage && (
+          <nav
+            className="header-nav-links desktop-only"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '4px 10px',
-              backgroundColor: 'rgba(16, 185, 129, 0.08)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
-              borderRadius: '999px',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              fontFamily: 'var(--font-mono)',
-              color: '#34d399',
+              gap: '6px',
+              margin: '0 16px',
+              flexShrink: 0,
             }}
           >
-            <span className="status-dot status-dot-active" style={{ width: '6px', height: '6px' }} />
-            <span>GRID ONLINE</span>
-          </div>
-        </div>
+            {[
+              { name: 'Command HUD', href: '#platform' },
+              { name: 'Threat Matrix', href: '#threat-vectors' },
+              { name: 'Hacker CLI', href: '#cli-terminal' },
+              { name: 'Triage Lifecycle', href: '#workflow' },
+            ].map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                style={{
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  color: '#cbd5e1',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  whiteSpace: 'nowrap',
+                  textDecoration: 'none',
+                  transition: 'all 0.18s ease',
+                  border: '1px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  cyberAudio.playHover();
+                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 0, 60, 0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 0, 60, 0.35)';
+                  e.currentTarget.style.boxShadow = '0 0 12px rgba(255, 0, 60, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#cbd5e1';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                {item.name}
+              </a>
+            ))}
 
-        {/* Public Navigation Links */}
-        {isPublicPage && (
-          <nav
-            style={{
-              gap: '24px',
-            }}
-            className="header-nav-links desktop-only"
-          >
-            <a 
-              href="#platform" 
-              style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}
-              onMouseEnter={() => cyberAudio.playHover()}
-            >
-              Command HUD
-            </a>
-            <a 
-              href="#threat-vectors" 
-              style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}
-              onMouseEnter={() => cyberAudio.playHover()}
-            >
-              Threat Matrix
-            </a>
-            <a 
-              href="#cli-terminal" 
-              style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}
-              onMouseEnter={() => cyberAudio.playHover()}
-            >
-              Hacker CLI
-            </a>
-            <a 
-              href="#workflow" 
-              style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}
-              onMouseEnter={() => cyberAudio.playHover()}
-            >
-              Triage Lifecycle
-            </a>
-            <Link 
-              to="/safety" 
-              style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}
-              onMouseEnter={() => cyberAudio.playHover()}
+            <Link
+              to="/safety"
+              style={{
+                fontSize: '0.84rem',
+                fontWeight: 600,
+                color: '#cbd5e1',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                whiteSpace: 'nowrap',
+                textDecoration: 'none',
+                transition: 'all 0.18s ease',
+                border: '1px solid transparent',
+              }}
+              onMouseEnter={(e) => {
+                cyberAudio.playHover();
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.backgroundColor = 'rgba(0, 240, 255, 0.12)';
+                e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.35)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#cbd5e1';
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               Safety Hub
             </Link>
           </nav>
         )}
 
-        {/* Right Menu Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Quick Intel Search Trigger */}
-          <button
-            onClick={() => {
-              cyberAudio.playClick();
-              setCommandPaletteOpen(true);
-            }}
-            onMouseEnter={() => cyberAudio.playHover()}
-            className="intel-search-btn"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              backgroundColor: 'rgba(9, 14, 28, 0.85)',
-              border: '1px solid rgba(56, 189, 248, 0.2)',
-              borderRadius: '8px',
-              padding: '7px 12px',
-              color: 'var(--text-muted)',
-              fontSize: '0.825rem',
-              transition: 'var(--transition)',
-              cursor: 'pointer',
-            }}
-            title="Search Intel (Ctrl+K)"
-          >
-            <Search size={15} color="var(--accent-cyan)" />
-            <span className="intel-search-text" style={{ fontSize: '0.8rem' }}>Intel Search</span>
-            <kbd
-              className="intel-search-kbd"
-              style={{
-                fontSize: '0.675rem',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: 'var(--accent-cyan-bright)',
-                fontFamily: 'var(--font-mono)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              }}
-            >
-              Ctrl+K
-            </kbd>
-          </button>
-
-          {/* Desktop Auth Controls (Hidden on Mobile) */}
-          <div className="desktop-auth-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* RIGHT: User Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+          {/* Desktop Auth Controls */}
+          <div className="desktop-auth-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isAuthenticated ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <NotificationBell />
 
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {user?.fullName?.split(' ')[0]}
+                {/* Streamlined User Identity Pill */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '4px 10px',
+                    backgroundColor: 'rgba(255, 0, 60, 0.1)',
+                    border: '1px solid rgba(255, 0, 60, 0.35)',
+                    borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span className="status-dot status-dot-critical" style={{ width: '6px', height: '6px' }} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f8fafc' }}>
+                    {user?.fullName?.split(' ')[0] || 'User'}
                   </span>
-                  <span 
-                    style={{ 
-                      fontSize: '0.65rem', 
-                      color: 'var(--accent-cyan)', 
-                      textTransform: 'uppercase', 
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      color: '#ff4d6d',
+                      fontWeight: 800,
                       fontFamily: 'var(--font-mono)',
-                      fontWeight: 700 
+                      textTransform: 'uppercase',
+                      backgroundColor: 'rgba(255, 0, 60, 0.25)',
+                      padding: '1px 5px',
+                      borderRadius: '3px',
                     }}
                   >
                     {user?.role?.replace('ROLE_', '')}
@@ -360,20 +455,56 @@ export const Header = () => {
                 </div>
 
                 {isAdmin && (
-                  <Link to="/admin" className="btn btn-secondary btn-sm" title="SOC Admin Console">
-                    <ShieldAlert size={14} color="var(--accent-cyan)" /> Admin
+                  <Link
+                    to="/admin"
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      padding: '5px 10px',
+                      fontSize: '0.78rem',
+                      gap: '5px',
+                      borderColor: 'rgba(255, 0, 60, 0.4)',
+                      color: '#f87171',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title="SOC Admin Console"
+                  >
+                    <ShieldAlert size={13} color="#ff003c" /> Admin
                   </Link>
                 )}
 
                 {isCoordinator && !isAdmin && (
-                  <Link to="/coordinator" className="btn btn-secondary btn-sm" title="Coordinator Console">
-                    <LayoutDashboard size={14} color="var(--accent-cyan)" /> Coordinator
+                  <Link
+                    to="/coordinator"
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      padding: '5px 10px',
+                      fontSize: '0.78rem',
+                      gap: '5px',
+                      borderColor: 'rgba(0, 240, 255, 0.4)',
+                      color: '#38bdf8',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title="Coordinator Console"
+                  >
+                    <LayoutDashboard size={13} color="#00f0ff" /> Coordinator
                   </Link>
                 )}
 
                 {!isAdmin && !isCoordinator && (
-                  <Link to="/dashboard" className="btn btn-secondary btn-sm" title="User Workspace">
-                    <LayoutDashboard size={14} color="var(--accent-cyan)" /> Dashboard
+                  <Link
+                    to="/dashboard"
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      padding: '5px 10px',
+                      fontSize: '0.78rem',
+                      gap: '5px',
+                      borderColor: 'rgba(0, 240, 255, 0.4)',
+                      color: '#38bdf8',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title="User Workspace"
+                  >
+                    <LayoutDashboard size={13} color="#00f0ff" /> Dashboard
                   </Link>
                 )}
 
@@ -381,17 +512,40 @@ export const Header = () => {
                   onClick={handleLogout} 
                   className="btn btn-ghost btn-sm" 
                   title="Logout"
-                  style={{ padding: '6px', color: 'var(--text-muted)' }}
+                  style={{
+                    padding: '6px 8px',
+                    color: 'var(--text-muted)',
+                    borderRadius: '6px',
+                  }}
                 >
-                  <LogOut size={16} />
+                  <LogOut size={15} />
                 </button>
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Link to="/login" className="btn btn-secondary btn-sm" style={{ fontWeight: 600, fontSize: '0.85rem', padding: '6px 14px' }}>
+                <Link
+                  to="/login"
+                  className="btn btn-secondary btn-sm"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: '0.82rem',
+                    padding: '6px 14px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   Sign In
                 </Link>
-                <Link to="/report" className="btn btn-primary btn-sm" style={{ fontWeight: 700, fontSize: '0.85rem', padding: '6px 14px' }}>
+                <Link
+                  to="/report"
+                  className="btn btn-danger btn-sm"
+                  style={{
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    padding: '6px 14px',
+                    whiteSpace: 'nowrap',
+                    gap: '5px',
+                  }}
+                >
                   <AlertTriangle size={13} /> Report
                 </Link>
               </div>
@@ -734,7 +888,7 @@ export const Header = () => {
           }
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

@@ -211,6 +211,74 @@ class CyberAudioSynthesizer {
       osc.stop(now + 0.05);
     } catch (e) {}
   }
+
+  // Cinematic Cyber Portal Breach SFX (Sub-bass drop + high-voltage warp charge + harmonic access arpeggio)
+  playPortalBreach() {
+    this.muted = false; // User interacted! Unmute audio for immersive cyber session
+    this.init();
+    try {
+      const now = this.ctx.currentTime;
+      // 1. Massive Sub-bass boom
+      const sub = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      sub.type = 'sawtooth';
+      sub.frequency.setValueAtTime(110, now);
+      sub.frequency.exponentialRampToValueAtTime(28, now + 0.65);
+      subGain.gain.setValueAtTime(0.22, now);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+      sub.connect(subGain);
+      subGain.connect(this.ctx.destination);
+      sub.start(now);
+      sub.stop(now + 0.7);
+
+      // 2. High-voltage energy arc rising (warp acceleration)
+      const warp = this.ctx.createOscillator();
+      const warpGain = this.ctx.createGain();
+      warp.type = 'sawtooth';
+      warp.frequency.setValueAtTime(180, now + 0.08);
+      warp.frequency.exponentialRampToValueAtTime(2800, now + 0.72);
+      warpGain.gain.setValueAtTime(0.02, now + 0.08);
+      warpGain.gain.linearRampToValueAtTime(0.12, now + 0.58);
+      warpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+      warp.connect(warpGain);
+      warpGain.connect(this.ctx.destination);
+      warp.start(now + 0.08);
+      warp.stop(now + 0.75);
+
+      // 3. Cyber system access arpeggio (C5, G5, C6, E6)
+      [523.25, 783.99, 1046.5, 1318.5].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + 0.58 + idx * 0.08);
+        g.gain.setValueAtTime(0.09, now + 0.58 + idx * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.58 + idx * 0.08 + 0.45);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start(now + 0.58 + idx * 0.08);
+        osc.stop(now + 0.58 + idx * 0.08 + 0.45);
+      });
+    } catch (e) {}
+  }
+
+  // Eerie predator targeting hum on portal hover
+  playPortalHover() {
+    this.init();
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(75, now);
+      osc.frequency.linearRampToValueAtTime(150, now + 0.09);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.09);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch (e) {}
+  }
 }
 
 export const cyberAudio = new CyberAudioSynthesizer();

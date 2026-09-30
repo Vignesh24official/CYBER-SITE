@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: supabase
   datasource:
     url: ${SUPABASE_DB_URL:${DATABASE_URL:jdbc:postgresql://db.ndoyiyfevnpqdvcsommy.supabase.co:5432/postgres?sslmode=require}}
     username: ${SUPABASE_DB_USER:${DATABASE_USERNAME:postgres}}

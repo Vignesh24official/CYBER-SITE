@@ -25,10 +25,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 242, 254, 0.08), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 90% 60%, rgba(99, 102, 241, 0.05), transparent 70%),
-    radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.05), transparent 60%);
+    radial-gradient(circle at 12% 18%, rgba(255, 0, 60, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 88% 82%, rgba(0, 240, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 10%, rgba(0, 102, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 25%, rgba(255, 0, 60, 0.06) 0%, transparent 35%);
   background-attachment: fixed;
+}
+
+/* CRT SCANLINE OVERLAY - SCARY HACKER TERMINAL FEEL */
+body::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 60, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 240, 255, 0.02));
+  z-index: 9990;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -43,23 +58,24 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-mono);
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars - Red & Blue Cyber */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-darkest);
+  background: #020408;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, #ff003c 0%, #00f0ff 100%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-cyan);
+  background: #ff003c;
+  box-shadow: 0 0 10px #ff003c;
 }
 
 /* Links */
@@ -70,7 +86,8 @@ a {
 }
 
 a:hover {
-  color: #7dd3fc;
+  color: #ff3366;
+  text-shadow: 0 0 10px rgba(255, 0, 60, 0.6);
 }
 
 button {
@@ -94,8 +111,8 @@ input, select, textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px var(--accent-cyan-glow), 0 0 12px rgba(0, 242, 254, 0.2);
+  border-color: #00f0ff;
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.3), 0 0 15px rgba(255, 0, 60, 0.3);
   outline: none;
 }
 
@@ -103,7 +120,7 @@ input::placeholder, textarea::placeholder {
   color: var(--text-muted);
 }
 
-/* Modern Cyber Buttons */
+/* Modern Cyber Buttons - Blue & Red Hacker Energy */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -115,7 +132,7 @@ input::placeholder, textarea::placeholder {
   font-weight: 600;
   font-size: 0.9rem;
   transition: var(--transition);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   text-decoration: none;
   cursor: pointer;
   position: relative;
@@ -123,37 +140,42 @@ input::placeholder, textarea::placeholder {
   white-space: nowrap;
 }
 
+/* Primary Button: Dual Red-Blue Neon Power */
 .btn-primary {
-  background: linear-gradient(135deg, #00f2fe 0%, #0284c7 50%, #2563eb 100%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #020617;
-  font-weight: 700;
-  box-shadow: 0 4px 20px rgba(0, 242, 254, 0.35);
+  background: linear-gradient(135deg, #ff003c 0%, #1e1b4b 45%, #00f0ff 100%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(255, 0, 60, 0.4), 0 0 30px rgba(0, 240, 255, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 242, 254, 0.55);
-  color: #000;
+  background: linear-gradient(135deg, #ff1744 0%, #2e1065 40%, #38bdf8 100%);
+  box-shadow: 0 8px 30px rgba(255, 0, 60, 0.65), 0 0 45px rgba(0, 240, 255, 0.45);
+  color: #ffffff;
 }
 
 .btn-primary:active {
   transform: translateY(0);
 }
 
+/* Secondary Button: Stealth Obsidian with Dual Red-Blue Rim */
 .btn-secondary {
-  background: rgba(13, 22, 42, 0.7);
+  background: rgba(8, 12, 22, 0.85);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(0, 240, 255, 0.3);
   color: var(--text-primary);
+  box-shadow: inset 0 0 12px rgba(255, 0, 60, 0.1);
 }
 
 .btn-secondary:hover {
-  background: rgba(22, 36, 68, 0.85);
-  border-color: var(--accent-cyan-bright);
+  background: rgba(16, 22, 38, 0.95);
+  border-color: #ff003c;
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 20px rgba(255, 0, 60, 0.35), 0 0 15px rgba(0, 240, 255, 0.2);
 }
 
 .btn-ghost {
@@ -163,19 +185,24 @@ input::placeholder, textarea::placeholder {
 }
 
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+  background: rgba(255, 0, 60, 0.12);
+  border-color: rgba(255, 0, 60, 0.3);
+  color: #ff4d6d;
 }
 
+/* Danger / Hacker Breach Button */
 .btn-danger {
-  background: rgba(244, 63, 94, 0.15);
-  border: 1px solid rgba(244, 63, 94, 0.35);
-  color: #fb7185;
+  background: linear-gradient(135deg, rgba(255, 0, 60, 0.35) 0%, rgba(153, 0, 0, 0.4) 100%);
+  border: 1px solid #ff003c;
+  color: #ff4d6d;
+  box-shadow: 0 0 20px rgba(255, 0, 60, 0.45);
 }
 
 .btn-danger:hover {
-  background: rgba(244, 63, 94, 0.28);
+  background: #ff003c;
+  color: #ffffff;
   transform: translateY(-2px);
+  box-shadow: 0 0 35px #ff003c;
 }
 
 .btn-emerald {
@@ -201,20 +228,22 @@ input::placeholder, textarea::placeholder {
   border-radius: var(--radius-md);
 }
 
-/* Glass & Graphite Cards */
+/* Glass & Graphite Cards - Scary Hacker Rim Lighting */
 .card, .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  border: 1px solid rgba(0, 240, 255, 0.2);
   border-radius: var(--radius-md);
   padding: 24px;
   box-shadow: var(--shadow-card);
   transition: var(--transition);
+  position: relative;
 }
 
 .card:hover {
-  border-color: var(--border-color-hover);
+  border-color: rgba(255, 0, 60, 0.5);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .card-interactive {
@@ -223,8 +252,8 @@ input::placeholder, textarea::placeholder {
 
 .card-interactive:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-card-hover);
-  border-color: rgba(0, 242, 254, 0.35);
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 0, 60, 0.35), 0 0 45px rgba(0, 240, 255, 0.25);
+  border-color: #ff003c;
 }
 
 .card-header {
@@ -233,7 +262,7 @@ input::placeholder, textarea::placeholder {
   justify-content: space-between;
   margin-bottom: 18px;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
 }
 
 .card-title {
@@ -252,15 +281,15 @@ input::placeholder, textarea::placeholder {
   gap: 8px;
   padding: 6px 14px;
   border-radius: var(--radius-full);
-  background: rgba(0, 242, 254, 0.08);
-  border: 1px solid rgba(0, 242, 254, 0.25);
-  color: var(--accent-cyan-bright);
+  background: rgba(255, 0, 60, 0.12);
+  border: 1px solid rgba(255, 0, 60, 0.45);
+  color: #ff4d6d;
   font-size: 0.775rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-family: var(--font-mono);
-  box-shadow: 0 0 16px rgba(0, 242, 254, 0.15);
+  box-shadow: 0 0 16px rgba(255, 0, 60, 0.3);
 }
 
 /* Severity Badges */
@@ -281,6 +310,7 @@ input::placeholder, textarea::placeholder {
   background: var(--sev-critical-bg);
   border: 1px solid var(--sev-critical-border);
   color: var(--sev-critical-text);
+  box-shadow: 0 0 10px rgba(255, 0, 60, 0.3);
 }
 
 .sev-high {
@@ -316,15 +346,15 @@ input::placeholder, textarea::placeholder {
 }
 
 .status-dot-active {
-  background-color: var(--accent-emerald);
-  box-shadow: 0 0 10px var(--accent-emerald);
-  animation: pulse-glow 2s infinite;
+  background-color: #00f0ff;
+  box-shadow: 0 0 12px #00f0ff;
+  animation: pulse-glow-cyan 2s infinite;
 }
 
 .status-dot-critical {
-  background-color: var(--accent-crimson);
-  box-shadow: 0 0 10px var(--accent-crimson);
-  animation: pulse-glow-red 1.5s infinite;
+  background-color: #ff003c;
+  box-shadow: 0 0 14px #ff003c;
+  animation: pulse-glow-red 1.2s infinite;
 }
 
 .status-dot-warning {
@@ -332,16 +362,16 @@ input::placeholder, textarea::placeholder {
   box-shadow: 0 0 10px var(--accent-amber);
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-glow-cyan {
   0% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.9); }
   100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes pulse-glow-red {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.15); }
-  100% { opacity: 1; transform: scale(1); }
+  0% { opacity: 1; transform: scale(1); box-shadow: 0 0 10px #ff003c; }
+  50% { opacity: 0.3; transform: scale(1.25); box-shadow: 0 0 25px #ff003c; }
+  100% { opacity: 1; transform: scale(1); box-shadow: 0 0 10px #ff003c; }
 }
 
 @keyframes radar-sweep-spin {
@@ -370,20 +400,20 @@ table {
 }
 
 th {
-  background-color: #070d1a;
-  color: var(--text-secondary);
-  font-weight: 600;
+  background-color: #050812;
+  color: #7dd3fc;
+  font-weight: 700;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
   text-transform: uppercase;
   font-size: 0.72rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   font-family: var(--font-mono);
 }
 
 td {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
@@ -392,7 +422,7 @@ tr:last-child td {
 }
 
 tr:hover td {
-  background-color: var(--bg-card-hover);
+  background-color: rgba(255, 0, 60, 0.06);
 }
 
 /* Layout Utilities */
@@ -460,20 +490,20 @@ tr:hover td {
 }
 
 /* ========================================================================= */
-/* MOVING CYBER EFFECTS & KEYFRAME ANIMATIONS                               */
+/* DUAL RED & BLUE LASER SCANNERS & SCARY HACKER KEYFRAMES                  */
 /* ========================================================================= */
 
-/* Moving Horizontal Cyber Laser Scanner */
+/* Moving Horizontal Red Threat Laser Scanner */
 .cyber-laser-beam {
   position: absolute;
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, rgba(0, 242, 254, 0.4) 15%, #00f2fe 50%, rgba(56, 189, 248, 0.4) 85%, transparent 100%);
-  box-shadow: 0 0 15px #00f2fe, 0 0 30px rgba(0, 242, 254, 0.8), 0 0 50px rgba(0, 242, 254, 0.4);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 0, 60, 0.5) 15%, #ff003c 50%, rgba(0, 240, 255, 0.5) 85%, transparent 100%);
+  box-shadow: 0 0 15px #ff003c, 0 0 30px rgba(0, 240, 255, 0.8), 0 0 50px rgba(255, 0, 60, 0.5);
   pointer-events: none;
   z-index: 4;
-  animation: cyber-laser-sweep 7s ease-in-out infinite;
+  animation: cyber-laser-sweep 6s ease-in-out infinite;
 }
 
 @keyframes cyber-laser-sweep {
@@ -542,7 +572,7 @@ tr:hover td {
   100% { transform: translateY(12px) rotate(-1.5deg); }
 }
 
-/* Traveling Border Beam on Cards */
+/* Traveling Border Beam on Cards - Dual Red & Blue */
 .cyber-border-beam {
   position: relative;
   overflow: hidden;
@@ -555,15 +585,15 @@ tr:hover td {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: conic-gradient(transparent, transparent, transparent, #00f2fe, #38bdf8, transparent);
-  animation: rotate-border 6s linear infinite;
+  background: conic-gradient(transparent, transparent, #ff003c, #00f0ff, transparent);
+  animation: rotate-border 5s linear infinite;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.35;
+  opacity: 0.45;
 }
 
 .cyber-border-beam:hover::before {
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .cyber-border-beam > * {
@@ -580,18 +610,18 @@ tr:hover td {
 /* Attack Pulse Flash */
 @keyframes attack-pulse-flash {
   0% { opacity: 0.4; }
-  50% { opacity: 1; filter: brightness(1.4); }
+  50% { opacity: 1; filter: brightness(1.5) drop-shadow(0 0 15px #ff003c); }
   100% { opacity: 0.4; }
 }
 
 /* Cyber Shimmer Line */
 .shimmer-text {
-  background: linear-gradient(90deg, #ffffff 0%, #00f2fe 50%, #ffffff 100%);
+  background: linear-gradient(90deg, #ff003c 0%, #ffffff 40%, #00f0ff 70%, #ff003c 100%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  animation: shimmer-shine 4s linear infinite;
+  animation: shimmer-shine 3.5s linear infinite;
 }
 
 @keyframes shimmer-shine {
@@ -600,8 +630,28 @@ tr:hover td {
   }
 }
 
+/* Hacker Glitch Text Effect */
+.hacker-glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.hacker-glitch:hover {
+  text-shadow: 2px 0 #ff003c, -2px 0 #00f0ff;
+  animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(-2deg); }
+  40% { transform: skew(2deg); }
+  60% { transform: skew(-1deg); }
+  80% { transform: skew(1deg); }
+  100% { transform: skew(0deg); }
+}
+
 /* ========================================================================= */
-/* MILITARY-GRADE CYBER HUD CORNERS & CHAMFERED POLYGONS                    */
+/* MILITARY-GRADE CYBER HUD CORNERS - RED & BLUE TARGETING                  */
 /* ========================================================================= */
 
 .cyber-chamfer {
@@ -625,10 +675,11 @@ tr:hover td {
   left: -2px;
   width: 14px;
   height: 14px;
-  border-top: 2px solid #00f2fe;
-  border-left: 2px solid #00f2fe;
+  border-top: 2px solid #ff003c;
+  border-left: 2px solid #ff003c;
   pointer-events: none;
   z-index: 5;
+  filter: drop-shadow(0 0 4px #ff003c);
 }
 
 .hud-corner-tr {
@@ -637,10 +688,11 @@ tr:hover td {
   right: -2px;
   width: 14px;
   height: 14px;
-  border-top: 2px solid #00f2fe;
-  border-right: 2px solid #00f2fe;
+  border-top: 2px solid #00f0ff;
+  border-right: 2px solid #00f0ff;
   pointer-events: none;
   z-index: 5;
+  filter: drop-shadow(0 0 4px #00f0ff);
 }
 
 .hud-corner-bl {
@@ -649,10 +701,11 @@ tr:hover td {
   left: -2px;
   width: 14px;
   height: 14px;
-  border-bottom: 2px solid #00f2fe;
-  border-left: 2px solid #00f2fe;
+  border-bottom: 2px solid #00f0ff;
+  border-left: 2px solid #00f0ff;
   pointer-events: none;
   z-index: 5;
+  filter: drop-shadow(0 0 4px #00f0ff);
 }
 
 .hud-corner-br {
@@ -661,10 +714,11 @@ tr:hover td {
   right: -2px;
   width: 14px;
   height: 14px;
-  border-bottom: 2px solid #00f2fe;
-  border-right: 2px solid #00f2fe;
+  border-bottom: 2px solid #ff003c;
+  border-right: 2px solid #ff003c;
   pointer-events: none;
   z-index: 5;
+  filter: drop-shadow(0 0 4px #ff003c);
 }
 
 .cyber-badge-chamfer {
@@ -682,7 +736,6 @@ tr:hover td {
 /* MOBILE COMFORT SYSTEM & RESPONSIVE BREAKPOINTS (320px - 1024px)           */
 /* ========================================================================= */
 
-/* Viewport safety */
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
@@ -690,14 +743,12 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Touch & iOS input zoom prevention */
 @media (max-width: 768px) {
   input, select, textarea {
-    font-size: 16px !important; /* Prevents auto-zoom on iOS Safari */
+    font-size: 16px !important;
   }
 }
 
-/* Visibility toggles for Desktop vs Mobile */
 .desktop-only {
   display: flex !important;
 }
@@ -734,7 +785,6 @@ html, body {
   }
 }
 
-/* Responsive Dashboard & Workspace Layout */
 @media (max-width: 768px) {
   .app-sidebar {
     display: none !important;
@@ -771,9 +821,9 @@ html, body {
   grid-template-columns: 1fr 1fr;
   background-color: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(0, 240, 255, 0.25);
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 0, 60, 0.2);
 }
 
 @media (max-width: 880px) {
@@ -785,8 +835,8 @@ html, body {
 
 .auth-panel-left {
   padding: 44px 36px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(7, 9, 14, 0.95) 100%);
-  border-right: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(255, 0, 60, 0.12) 0%, rgba(5, 8, 17, 0.95) 100%);
+  border-right: 1px solid rgba(0, 240, 255, 0.18);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -796,7 +846,7 @@ html, body {
 @media (max-width: 880px) {
   .auth-panel-left {
     border-right: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.18);
     padding: 28px 20px;
   }
 }
@@ -812,7 +862,7 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background-color: rgba(10, 14, 23, 0.98);
+  background-color: rgba(6, 10, 20, 0.98);
 }
 
 @media (max-width: 880px) {
@@ -835,7 +885,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   transition: all 0.2s ease;
 }
 
@@ -871,9 +921,9 @@ html, body {
   max-width: 680px;
   background-color: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(0, 240, 255, 0.25);
   padding: 40px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 0, 60, 0.2);
 }
 
 @media (max-width: 640px) {
@@ -960,5 +1010,99 @@ html, body {
   }
 }
 
+/* ========================================================================= */
+/* CYBER PORTAL GATEWAY SMOOTH SITE ENTRANCE ANIMATIONS                     */
+/* ========================================================================= */
+@keyframes portalSiteEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.97) translateY(20px);
+    filter: blur(10px) brightness(1.2);
+  }
+  50% {
+    filter: blur(4px) brightness(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px) brightness(1);
+  }
+}
 
+.portal-site-entrance {
+  animation: portalSiteEntrance 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes portalHeaderSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portal-header-slide {
+  animation: portalHeaderSlideDown 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+@keyframes portalHeroStagger {
+  0% {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portal-hero-stagger {
+  animation: portalHeroStagger 1s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+}
+
+/* ========================================================================= */
+/* DEFCON-1 SECURITY PROTOCOL: ANTI-COPY, ANTI-SELECT, ANTI-PRINT STYLES     */
+/* ========================================================================= */
+*, *::before, *::after {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Strip selection highlighting across the entire application */
+::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+::-moz-selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+input, textarea {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+img {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  pointer-events: none;
+}
+
+/* Anti-Print Protection: Completely blanks out all contents if print or PDF export is attempted */
+@media print {
+  * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+}
 

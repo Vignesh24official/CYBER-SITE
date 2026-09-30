@@ -78,7 +78,7 @@ export const TerminalPanel = ({ isExpanded = false, isModal = false, onClose }) 
         break;
 
       case 'whoami':
-        newLogs.push({ type: 'success', text: `User: ${user?.fullName || 'John Administrator'} | Email: ${user?.email || 'admin@cybershield.org'} | Role: ${user?.role || 'ROLE_ADMIN'}` });
+        newLogs.push({ type: 'success', text: `User: ${user?.fullName || 'Cyber Defender'} | Email: ${user?.email || 'admin@cybershield.org'} | Role: ${user?.role || 'ROLE_ADMIN'}` });
         break;
 
       case 'clear':

@@ -7,7 +7,7 @@ export const CyberHoloShield = ({ size = 220 }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setPulseCount((prev) => prev + 1);
-    }, 2800);
+    }, 2400);
     return () => clearInterval(interval);
   }, []);
 
@@ -23,14 +23,14 @@ export const CyberHoloShield = ({ size = 220 }) => {
         margin: '0 auto',
       }}
     >
-      {/* Outer Hexagonal Telemetry Ring (Clockwise Rotation) */}
+      {/* Outer Menacing Crimson Red Ring (Clockwise Rotation) */}
       <svg
         style={{
           position: 'absolute',
           width: '100%',
           height: '100%',
-          animation: 'holo-rotate-cw 20s linear infinite',
-          filter: 'drop-shadow(0 0 8px rgba(0, 242, 254, 0.4))',
+          animation: 'holo-rotate-cw 18s linear infinite',
+          filter: 'drop-shadow(0 0 10px rgba(255, 0, 60, 0.55))',
         }}
         viewBox="0 0 200 200"
       >
@@ -39,7 +39,7 @@ export const CyberHoloShield = ({ size = 220 }) => {
           cy="100"
           r="92"
           fill="none"
-          stroke="rgba(56, 189, 248, 0.2)"
+          stroke="rgba(255, 0, 60, 0.3)"
           strokeWidth="1.5"
           strokeDasharray="8 6 2 6"
         />
@@ -48,24 +48,25 @@ export const CyberHoloShield = ({ size = 220 }) => {
           cy="100"
           r="86"
           fill="none"
-          stroke="rgba(0, 242, 254, 0.5)"
+          stroke="rgba(255, 0, 60, 0.75)"
           strokeWidth="1.5"
           strokeDasharray="40 18 60 18"
         />
-        {/* Corner Telemetry Marks */}
-        <line x1="100" y1="2" x2="100" y2="12" stroke="#00f2fe" strokeWidth="2" />
-        <line x1="100" y1="188" x2="100" y2="198" stroke="#00f2fe" strokeWidth="2" />
-        <line x1="2" y1="100" x2="12" y2="100" stroke="#00f2fe" strokeWidth="2" />
-        <line x1="188" y1="100" x2="198" y2="100" stroke="#00f2fe" strokeWidth="2" />
+        {/* Red Target Telemetry Marks */}
+        <line x1="100" y1="2" x2="100" y2="12" stroke="#ff003c" strokeWidth="2.5" />
+        <line x1="100" y1="188" x2="100" y2="198" stroke="#ff003c" strokeWidth="2.5" />
+        <line x1="2" y1="100" x2="12" y2="100" stroke="#ff003c" strokeWidth="2.5" />
+        <line x1="188" y1="100" x2="198" y2="100" stroke="#ff003c" strokeWidth="2.5" />
       </svg>
 
-      {/* Counter-Rotating Dashed Inner Compass (Counter-Clockwise Rotation) */}
+      {/* Counter-Rotating High-Voltage Blue Inner Compass (Counter-Clockwise Rotation) */}
       <svg
         style={{
           position: 'absolute',
           width: '82%',
           height: '82%',
-          animation: 'holo-rotate-ccw 14s linear infinite',
+          animation: 'holo-rotate-ccw 12s linear infinite',
+          filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.5))',
         }}
         viewBox="0 0 160 160"
       >
@@ -74,65 +75,66 @@ export const CyberHoloShield = ({ size = 220 }) => {
           cy="80"
           r="72"
           fill="none"
-          stroke="rgba(168, 85, 247, 0.35)"
+          stroke="rgba(0, 240, 255, 0.4)"
           strokeWidth="1"
-          strokeDasharray="12 12"
+          strokeDasharray="10 10"
         />
         <polygon
           points="80,14 138,46 138,114 80,146 22,114 22,46"
           fill="none"
-          stroke="rgba(56, 189, 248, 0.25)"
-          strokeWidth="1"
+          stroke="rgba(0, 240, 255, 0.6)"
+          strokeWidth="1.5"
         />
       </svg>
 
-      {/* Sonar Shockwave Expansions */}
+      {/* Sonar Shockwave Waves: Alternating Red & Blue Cyber Pulses */}
       <div
-        key={`sonar-${pulseCount}`}
+        key={`sonar-red-${pulseCount}`}
         style={{
           position: 'absolute',
           width: '70px',
           height: '70px',
           borderRadius: '50%',
-          border: '2px solid rgba(0, 242, 254, 0.8)',
-          boxShadow: '0 0 20px rgba(0, 242, 254, 0.6)',
-          animation: 'sonar-shockwave 2.6s cubic-bezier(0.1, 0.6, 0.3, 1) forwards',
+          border: '2px solid rgba(255, 0, 60, 0.85)',
+          boxShadow: '0 0 25px rgba(255, 0, 60, 0.7)',
+          animation: 'sonar-shockwave 2.4s cubic-bezier(0.1, 0.6, 0.3, 1) forwards',
           pointerEvents: 'none',
         }}
       />
       <div
-        key={`sonar-delayed-${pulseCount}`}
+        key={`sonar-blue-${pulseCount}`}
         style={{
           position: 'absolute',
           width: '70px',
           height: '70px',
           borderRadius: '50%',
-          border: '1.5px solid rgba(16, 185, 129, 0.6)',
-          animation: 'sonar-shockwave 2.6s 0.7s cubic-bezier(0.1, 0.6, 0.3, 1) forwards',
+          border: '2px solid rgba(0, 240, 255, 0.85)',
+          boxShadow: '0 0 25px rgba(0, 240, 255, 0.7)',
+          animation: 'sonar-shockwave 2.4s 0.6s cubic-bezier(0.1, 0.6, 0.3, 1) forwards',
           pointerEvents: 'none',
         }}
       />
 
-      {/* Central Glowing Shield Core */}
+      {/* Central Glowing Shield Core - Dual Red & Blue Plasma */}
       <div
         style={{
           position: 'relative',
-          width: '74px',
-          height: '74px',
+          width: '78px',
+          height: '78px',
           borderRadius: '18px',
-          background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.25) 0%, rgba(37, 99, 235, 0.35) 100%)',
-          border: '2px solid rgba(0, 242, 254, 0.7)',
+          background: 'linear-gradient(135deg, rgba(255, 0, 60, 0.35) 0%, rgba(10, 15, 30, 0.95) 50%, rgba(0, 240, 255, 0.35) 100%)',
+          border: '2px solid rgba(255, 255, 255, 0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 0 35px rgba(0, 242, 254, 0.6), inset 0 0 15px rgba(0, 242, 254, 0.4)',
+          boxShadow: '0 0 35px rgba(255, 0, 60, 0.6), 0 0 45px rgba(0, 240, 255, 0.4), inset 0 0 15px rgba(255, 0, 60, 0.3)',
           zIndex: 3,
         }}
       >
-        <Shield size={38} color="#ffffff" style={{ filter: 'drop-shadow(0 0 8px #00f2fe)' }} />
+        <Shield size={40} color="#ffffff" style={{ filter: 'drop-shadow(0 0 10px #ff003c) drop-shadow(0 0 15px #00f0ff)' }} />
       </div>
 
-      {/* Target HUD Brackets */}
+      {/* Dual Red & Blue Target HUD Brackets */}
       <div
         style={{
           position: 'absolute',
@@ -141,10 +143,10 @@ export const CyberHoloShield = ({ size = 220 }) => {
           pointerEvents: 'none',
         }}
       >
-        <div style={{ position: 'absolute', top: 4, left: 4, width: 12, height: 12, borderTop: '2px solid #00f2fe', borderLeft: '2px solid #00f2fe' }} />
-        <div style={{ position: 'absolute', top: 4, right: 4, width: 12, height: 12, borderTop: '2px solid #00f2fe', borderRight: '2px solid #00f2fe' }} />
-        <div style={{ position: 'absolute', bottom: 4, left: 4, width: 12, height: 12, borderBottom: '2px solid #00f2fe', borderLeft: '2px solid #00f2fe' }} />
-        <div style={{ position: 'absolute', bottom: 4, right: 4, width: 12, height: 12, borderBottom: '2px solid #00f2fe', borderRight: '2px solid #00f2fe' }} />
+        <div style={{ position: 'absolute', top: 4, left: 4, width: 14, height: 14, borderTop: '2px solid #ff003c', borderLeft: '2px solid #ff003c', filter: 'drop-shadow(0 0 4px #ff003c)' }} />
+        <div style={{ position: 'absolute', top: 4, right: 4, width: 14, height: 14, borderTop: '2px solid #00f0ff', borderRight: '2px solid #00f0ff', filter: 'drop-shadow(0 0 4px #00f0ff)' }} />
+        <div style={{ position: 'absolute', bottom: 4, left: 4, width: 14, height: 14, borderBottom: '2px solid #00f0ff', borderLeft: '2px solid #00f0ff', filter: 'drop-shadow(0 0 4px #00f0ff)' }} />
+        <div style={{ position: 'absolute', bottom: 4, right: 4, width: 14, height: 14, borderBottom: '2px solid #ff003c', borderRight: '2px solid #ff003c', filter: 'drop-shadow(0 0 4px #ff003c)' }} />
       </div>
     </div>
   );

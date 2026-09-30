@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { saveUserToSupabaseDatabase } from '../services/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -116,11 +117,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('cybershield_user', JSON.stringify(userData));
         setToken(accessToken);
         setUser(userData);
+
+        // Also ensure user details are synchronized to Supabase PostgreSQL database
+        saveUserToSupabaseDatabase(userData).catch((e) => console.warn('Supabase DB sync notice:', e));
+
         return userData;
       }
       throw new Error(res.message || 'Google authentication failed');
     } catch (err) {
-      // Offline fallback / mock for seed Google accounts
       const email = payload?.email?.toLowerCase()?.trim();
       const seedProfiles = {
         'admin@cybershield.org': {
@@ -164,18 +168,23 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('cybershield_user', JSON.stringify(fallbackUser));
         setToken(mockToken);
         setUser(fallbackUser);
+        saveUserToSupabaseDatabase(fallbackUser).catch(() => {});
         return fallbackUser;
       }
 
-      if (email && payload.isSignUp) {
+      if (email && (payload.isSignUp || !seedProfiles[email])) {
         const newUser = {
-          publicId: 'google-' + Date.now(),
+          publicId: 'google-' + Math.random().toString(36).substring(2, 9),
           fullName: payload.name || email.split('@')[0],
           email: email,
-          phone: '',
+          phone: payload.phone || '',
           role: 'ROLE_USER',
           accountStatus: 'ACTIVE',
         };
+
+        // Persist directly into Supabase PostgreSQL 'users' table
+        await saveUserToSupabaseDatabase(newUser);
+
         const mockToken = 'mock_jwt_' + btoa(JSON.stringify(newUser));
         localStorage.setItem('cybershield_token', mockToken);
         localStorage.setItem('cybershield_user', JSON.stringify(newUser));

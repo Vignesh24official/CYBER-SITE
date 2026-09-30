@@ -32,7 +32,8 @@ import {
   Crosshair,
   Wifi,
   Flame,
-  RotateCw
+  RotateCw,
+  ChevronUp
 } from 'lucide-react';
 import { CyberShieldSecurityPulse } from '../../components/common/CyberShieldSecurityPulse';
 import { CyberMatrixCanvas } from '../../components/common/CyberMatrixCanvas';
@@ -42,24 +43,94 @@ import { CyberThreatGlobe } from '../../components/common/CyberThreatGlobe';
 import { HoloTiltCard } from '../../components/common/HoloTiltCard';
 import { CyberTerminalWidget } from '../../components/common/CyberTerminalWidget';
 import { cyberAudio } from '../../services/cyberAudio';
-import { useAuth } from '../../context/AuthContext';
+import { analyzeUrlThreat } from '../../services/urlThreatEngine';
+import { CyberPortalGateway } from '../../components/portal/CyberPortalGateway';
+
+const PORTAL_STORAGE_KEY = 'cybershield_portal_breached';
+
+// In-memory runtime breach flag:
+// Resets on fresh visit, new tab, or page reload so user always sees the sequence!
+// Stays true only during in-app SPA routing (/login <-> /)
+let runtimePortalBreached = false;
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+
+  // Clear legacy localStorage / sessionStorage if runtime has not breached yet
+  if (typeof window !== 'undefined' && !runtimePortalBreached) {
+    try {
+      localStorage.removeItem(PORTAL_STORAGE_KEY);
+      sessionStorage.removeItem(PORTAL_STORAGE_KEY);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Scary Cyber Portal Entry Gatekeeper State:
+  // - Stage 1: Full screen option asked first
+  // - Stage 2: Logo graphic appears
+  // - Stage 3: Site presents
+  // - Persists during client-side navigation (/login <-> /)
+  // - Always triggers on new tab or reload
+  const [isPortalBreached, setIsPortalBreached] = useState(() => {
+    return runtimePortalBreached;
+  });
+
+  const [wasJustBreached, setWasJustBreached] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Feature: Always keep landing page on top of the website upon mounting/entering
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Monitor scroll for Back-to-Top HUD button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    cyberAudio.playClick();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const handleReopen = () => {
+      runtimePortalBreached = false;
+      try {
+        sessionStorage.removeItem(PORTAL_STORAGE_KEY);
+      } catch (e) {
+        console.error(e);
+      }
+      setIsPortalBreached(false);
+      setWasJustBreached(false);
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('cybershield-reopen-portal', handleReopen);
+    return () => window.removeEventListener('cybershield-reopen-portal', handleReopen);
+  }, []);
+
+  const handleBreachComplete = () => {
+    runtimePortalBreached = true;
+    try {
+      sessionStorage.setItem(PORTAL_STORAGE_KEY, 'true');
+    } catch (e) {
+      console.error(e);
+    }
+    setWasJustBreached(true);
+    setIsPortalBreached(true);
+    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cybershield-portal-breached'));
+    }
+  };
   const [activeTab, setActiveTab] = useState('globe'); // 'globe', 'radar', 'stream', 'crypto'
   const [vectorFilter, setVectorFilter] = useState('all');
   const [lifecycleStep, setLifecycleStep] = useState(1);
-
-  const handleLaunchRole = async (email, targetPath) => {
-    cyberAudio.playClick();
-    try {
-      await login({ email, password: 'Password@123' });
-      navigate(targetPath);
-    } catch (err) {
-      navigate('/login');
-    }
-  };
   
   // Interactive Live Attack Simulation Mode State
   const [isSimulatingAttack, setIsSimulatingAttack] = useState(false);
@@ -133,7 +204,7 @@ export const LandingPage = () => {
       .catch(() => {});
   }, []);
 
-  // Quick scanner simulation
+  // Live Threat Reconnaissance Scanner
   const handleScan = (e) => {
     e?.preventDefault();
     if (!scanInput.trim()) return;
@@ -142,27 +213,9 @@ export const LandingPage = () => {
 
     setTimeout(() => {
       setIsScanning(false);
-      const input = scanInput.toLowerCase();
-      const isMalicious = input.includes('pay') || input.includes('bank') || input.includes('verify') || input.includes('update') || input.includes('.xyz') || input.includes('.online');
-      
-      setScanResult({
-        indicator: scanInput,
-        score: isMalicious ? 94 : 14,
-        verdict: isMalicious ? 'CRITICAL THREAT DETECTED' : 'LOW RISK / UNFLAGGED',
-        category: isMalicious ? 'Credential Phishing & Impersonation' : 'Standard Web Host',
-        flags: isMalicious ? [
-          'Domain registered < 7 days ago',
-          'Punycode / Typosquatting vector match',
-          'Heuristic form detects password interception',
-          'Flagged in CyberShield Global Threat Blacklist'
-        ] : [
-          'Valid TLS certificate detected',
-          'No malicious heuristics identified',
-          'Clean historical telemetry record'
-        ],
-        sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-      });
-    }, 900);
+      const analysis = analyzeUrlThreat(scanInput);
+      setScanResult(analysis);
+    }, 600);
   };
 
   const threatVectors = [
@@ -354,7 +407,23 @@ export const LandingPage = () => {
   const currentStage = lifecycleStages.find(s => s.step === lifecycleStep) || lifecycleStages[0];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '90px', paddingBottom: '90px', color: 'var(--text-primary)' }}>
+    <>
+      {/* 0. IMMERSIVE CYBER SCARY ENTRY PORTAL GATEWAY */}
+      {!isPortalBreached && (
+        <CyberPortalGateway onBreachComplete={handleBreachComplete} />
+      )}
+
+      <div
+        className={wasJustBreached ? 'portal-site-entrance' : ''}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '90px',
+          paddingBottom: '90px',
+          color: 'var(--text-primary)',
+          opacity: 1,
+        }}
+      >
       
       {/* ========================================================================= */}
       {/* 1. HERO SECTION: NEXT-GEN CYBER COCKPIT WITH 3D GLOBE, LASERS, SCRAMBLER  */}
@@ -366,19 +435,20 @@ export const LandingPage = () => {
           padding: '80px 24px 90px',
           overflow: 'hidden',
           background: isSimulatingAttack 
-            ? 'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(244, 63, 94, 0.22) 0%, rgba(14, 5, 10, 0.98) 75%)'
-            : 'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(0, 242, 254, 0.16) 0%, rgba(4, 7, 17, 0.98) 75%)',
-          borderBottom: isSimulatingAttack ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid rgba(56, 189, 248, 0.15)',
+            ? 'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(255, 0, 60, 0.35) 0%, rgba(10, 2, 6, 0.98) 75%)'
+            : 'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(255, 0, 60, 0.22) 0%, rgba(0, 240, 255, 0.16) 45%, rgba(2, 4, 10, 0.98) 80%)',
+          borderBottom: isSimulatingAttack ? '1px solid #ff003c' : '1px solid rgba(255, 0, 60, 0.4)',
           transition: 'background 0.5s ease, border-color 0.5s ease',
+          boxShadow: 'inset 0 -20px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 0, 60, 0.15)',
         }}
       >
-        {/* INTERACTIVE 60FPS CYBER MATRIX CANVAS BACKGROUND */}
-        <CyberMatrixCanvas opacity={0.65} />
+        {/* INTERACTIVE 60FPS RED VS BLUE CYBER MATRIX CANVAS BACKGROUND */}
+        <CyberMatrixCanvas opacity={0.75} />
 
         {/* CONTINUOUS MOVING CYBER LASER SCANNER BEAM */}
         <div className="cyber-laser-beam" />
 
-        {/* Ambient Grid Overlay */}
+        {/* Ambient Grid Overlay with Red & Blue CRT Grain */}
         <div
           style={{
             position: 'absolute',
@@ -387,11 +457,11 @@ export const LandingPage = () => {
             right: 0,
             bottom: 0,
             backgroundImage: `
-              linear-gradient(to right, rgba(56, 189, 248, 0.06) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(56, 189, 248, 0.06) 1px, transparent 1px)
+              linear-gradient(to right, rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255, 0, 60, 0.08) 1px, transparent 1px)
             `,
-            backgroundSize: '48px 48px',
-            opacity: 0.7,
+            backgroundSize: '40px 40px',
+            opacity: 0.8,
             pointerEvents: 'none',
           }}
         />
@@ -415,14 +485,15 @@ export const LandingPage = () => {
                 className="shimmer-badge cyber-floating-1"
                 style={{ 
                   marginBottom: '16px',
-                  backgroundColor: isSimulatingAttack ? 'rgba(244, 63, 94, 0.15)' : 'rgba(0, 242, 254, 0.08)',
-                  borderColor: isSimulatingAttack ? 'rgba(244, 63, 94, 0.5)' : 'rgba(0, 242, 254, 0.25)',
-                  color: isSimulatingAttack ? '#fb7185' : 'var(--accent-cyan-bright)',
+                  backgroundColor: 'rgba(255, 0, 60, 0.14)',
+                  borderColor: '#ff003c',
+                  color: '#ff4d6d',
+                  boxShadow: '0 0 20px rgba(255, 0, 60, 0.35)',
                 }}
               >
-                <Sparkles size={14} color={isSimulatingAttack ? '#fb7185' : '#00f2fe'} />
+                <AlertTriangle size={14} color="#ff003c" />
                 <span>
-                  <CyberTextDecoder text={isSimulatingAttack ? "DEFCON 1: ACTIVE ATTACK MITIGATION SIMULATION" : "AUTONOMOUS CYBER DEFENSE & TRIAGE 2.0"} />
+                  <CyberTextDecoder text={isSimulatingAttack ? "DEFCON 1: ACTIVE RED TEAM ATTACK EXPLOIT IN PROGRESS" : "DEFCON 1 // RED CELL INTRUSION & BLUE CIPHER SHIELD"} />
                 </span>
               </div>
 
@@ -437,19 +508,23 @@ export const LandingPage = () => {
                   marginBottom: '20px',
                 }}
               >
-                <CyberTextDecoder text="Defend. Report." /> <br />
+                <span style={{ color: '#ff003c', textShadow: '0 0 25px rgba(255, 0, 60, 0.7)' }}>
+                  <CyberTextDecoder text="BREACH DETECTED." />
+                </span> <br />
                 <span 
                   className="shimmer-text"
                   style={{ 
-                    background: 'linear-gradient(135deg, #00f2fe 0%, #38bdf8 50%, #818cf8 100%)',
+                    background: 'linear-gradient(135deg, #ff003c 0%, #ffffff 40%, #00f0ff 80%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    textShadow: '0 0 35px rgba(0, 242, 254, 0.35)'
+                    textShadow: '0 0 35px rgba(0, 240, 255, 0.5)'
                   }}
                 >
-                  <CyberTextDecoder text="Investigate." />
+                  <CyberTextDecoder text="HACKER WARFARE." />
                 </span>{' '}
-                <CyberTextDecoder text="Secure." />
+                <span style={{ color: '#00f0ff', textShadow: '0 0 20px rgba(0, 240, 255, 0.5)' }}>
+                  <CyberTextDecoder text="CIPHER SHIELD." />
+                </span>
               </h1>
 
               <p
@@ -460,7 +535,7 @@ export const LandingPage = () => {
                   maxWidth: '560px',
                 }}
               >
-                Enterprise cybersecurity incident reporting and threat management platform. Connects citizens, enterprise victims, and certified SOC investigators through an automated triage pipeline backed by SHA-256 evidence hashing and zero-trust audit verification.
+                Active Red Team penetration alerts and military-grade Blue Team incident neutralization. Report compromised credentials, dissect weaponized malware payloads, and track cyber warfare telemetry with live zero-trust Supabase encryption.
               </p>
             </div>
 
@@ -501,103 +576,6 @@ export const LandingPage = () => {
               >
                 <ShieldCheck size={18} color="#34d399" /> Safety Hub <ChevronRight size={16} />
               </Link>
-            </div>
-
-            {/* 3 COMMAND WORKSPACES DIRECT ACCESS */}
-            <div
-              style={{
-                backgroundColor: 'rgba(7, 13, 28, 0.75)',
-                border: '1px solid rgba(56, 189, 248, 0.22)',
-                borderRadius: '12px',
-                padding: '14px 16px',
-                marginTop: '6px',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-              }}
-            >
-              <div style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan-bright)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Lock size={12} color="var(--accent-cyan)" />
-                  <span>1-Click Launch: 3 Command Consoles</span>
-                </span>
-                <span style={{ fontSize: '0.64rem', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>Password: Password@123</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchRole('admin@cybershield.org', '/admin')}
-                  className="card-interactive"
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    color: '#ffffff',
-                    transition: 'all 0.15s ease',
-                  }}
-                  title="Launch SOC Admin Console"
-                >
-                  <Shield size={16} color="#f87171" />
-                  <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 800 }}>1. Admin Console</div>
-                    <div style={{ fontSize: '0.64rem', color: '#fca5a5', fontFamily: 'var(--font-mono)' }}>admin@cybershield.org</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchRole('investigator@cybershield.org', '/coordinator')}
-                  className="card-interactive"
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    color: '#ffffff',
-                    transition: 'all 0.15s ease',
-                  }}
-                  title="Launch Coordinator Workbench"
-                >
-                  <Terminal size={16} color="#fbbf24" />
-                  <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 800 }}>2. Coordinator</div>
-                    <div style={{ fontSize: '0.64rem', color: '#fcd34d', fontFamily: 'var(--font-mono)' }}>investigator@cybershield.org</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchRole('user@cybershield.org', '/dashboard')}
-                  className="card-interactive"
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                    border: '1px solid rgba(6, 182, 212, 0.4)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    color: '#ffffff',
-                    transition: 'all 0.15s ease',
-                  }}
-                  title="Launch Citizen Defense Workspace"
-                >
-                  <Users size={16} color="#38bdf8" />
-                  <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 800 }}>3. Citizen Workspace</div>
-                    <div style={{ fontSize: '0.64rem', color: '#7dd3fc', fontFamily: 'var(--font-mono)' }}>user@cybershield.org</div>
-                  </div>
-                </button>
-              </div>
             </div>
 
             {/* Trust Badges Bar */}
@@ -1176,29 +1154,39 @@ export const LandingPage = () => {
           </form>
 
           {/* Quick Click Samples */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             <span>Quick test examples:</span>
             {[
-              'paypal-security-update.xyz',
-              'bank-kyc-verification.online',
-              '185.220.101.5'
+              { label: 'malware-c2-botnet.ru/lockbit', isThreat: true },
+              { label: 'darkweb-market.onion/carding-dumps', isThreat: true },
+              { label: 'bank-kyc-phishing.xyz/credentialtheft', isThreat: true },
+              { label: 'hacktool-exploit-payload.net/rce', isThreat: true },
+              { label: 'https://cybershield.org/safety-guide', isThreat: false },
+              { label: 'https://github.com/torvalds/linux', isThreat: false }
             ].map((sample) => (
               <button
-                key={sample}
+                key={sample.label}
                 type="button"
-                onClick={() => { setScanInput(sample); }}
+                onClick={() => { setScanInput(sample.label); }}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: sample.isThreat ? 'rgba(255, 0, 60, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                  border: sample.isThreat ? '1px solid rgba(255, 0, 60, 0.35)' : '1px solid rgba(16, 185, 129, 0.35)',
                   borderRadius: '6px',
-                  padding: '4px 10px',
-                  color: 'var(--accent-cyan-bright)',
-                  fontSize: '0.78rem',
+                  padding: '4px 9px',
+                  color: sample.isThreat ? '#ff4d6d' : '#34d399',
+                  fontSize: '0.76rem',
                   fontFamily: 'var(--font-mono)',
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                {sample}
+                <span>{sample.label}</span>
+                <span style={{ fontSize: '0.66rem', opacity: 0.85, fontWeight: 700 }}>
+                  ({sample.isThreat ? 'HIGH RISK' : 'LOW RISK'})
+                </span>
               </button>
             ))}
           </div>
@@ -1208,41 +1196,68 @@ export const LandingPage = () => {
             <div
               style={{
                 marginTop: '24px',
-                padding: '20px',
+                padding: '24px',
                 backgroundColor: 'rgba(4, 7, 17, 0.95)',
-                borderRadius: '12px',
-                border: scanResult.score > 50 ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid rgba(16, 185, 129, 0.4)',
+                borderRadius: '14px',
+                border: scanResult.isHighRisk ? '1.5px solid rgba(255, 0, 60, 0.6)' : '1.5px solid rgba(16, 185, 129, 0.5)',
+                boxShadow: scanResult.isHighRisk ? '0 0 35px rgba(255, 0, 60, 0.25)' : '0 0 30px rgba(16, 185, 129, 0.2)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '14px',
+                gap: '18px',
+                animation: 'fadeIn 0.3s ease',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Header Status Bar */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div
                     style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '8px',
-                      backgroundColor: scanResult.score > 50 ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                      border: scanResult.score > 50 ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '10px',
+                      backgroundColor: scanResult.isHighRisk ? 'rgba(255, 0, 60, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                      border: scanResult.isHighRisk ? '1.5px solid #ff003c' : '1.5px solid #10b981',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      boxShadow: scanResult.isHighRisk ? '0 0 16px rgba(255, 0, 60, 0.5)' : '0 0 16px rgba(16, 185, 129, 0.4)',
                     }}
                   >
-                    {scanResult.score > 50 ? (
-                      <AlertCircle size={22} color="#fb7185" />
+                    {scanResult.isHighRisk ? (
+                      <AlertCircle size={26} color="#ff003c" />
                     ) : (
-                      <ShieldCheck size={22} color="#34d399" />
+                      <ShieldCheck size={26} color="#34d399" />
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: 700, color: scanResult.score > 50 ? '#fb7185' : '#34d399' }}>
-                      {scanResult.verdict} (Risk Score: {scanResult.score}/100)
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <span
+                        style={{
+                          fontSize: '1.15rem',
+                          fontWeight: 800,
+                          color: scanResult.isHighRisk ? '#ff4d6d' : '#34d399',
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        {scanResult.verdict}
+                      </span>
+                      <span
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          fontFamily: 'var(--font-mono)',
+                          backgroundColor: scanResult.isHighRisk ? 'rgba(255, 0, 60, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                          color: scanResult.isHighRisk ? '#ff003c' : '#10b981',
+                          border: scanResult.isHighRisk ? '1px solid #ff003c' : '1px solid #10b981',
+                        }}
+                      >
+                        {scanResult.isHighRisk ? 'HIGH RISK' : 'LOW RISK'} ({scanResult.score}%)
+                      </span>
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                      Identified Category: {scanResult.category}
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', marginTop: '3px' }}>
+                      Threat Classification: <strong style={{ color: '#ffffff' }}>{scanResult.category}</strong>
                     </div>
                   </div>
                 </div>
@@ -1250,16 +1265,113 @@ export const LandingPage = () => {
                 <Link
                   to={`/report?evidence=${encodeURIComponent(scanResult.indicator)}`}
                   className="btn btn-primary btn-sm"
-                  style={{ gap: '8px', boxShadow: '0 0 15px rgba(0, 242, 254, 0.3)' }}
+                  style={{ gap: '8px', boxShadow: scanResult.isHighRisk ? '0 0 20px rgba(255, 0, 60, 0.4)' : '0 0 15px rgba(0, 242, 254, 0.3)' }}
                 >
                   <AlertTriangle size={14} /> File Formal Incident Report
                 </Link>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px', marginTop: '4px' }}>
+              {/* Threat Probability Gauge */}
+              <div style={{ padding: '14px 18px', backgroundColor: 'rgba(0, 0, 0, 0.45)', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Calculated Risk Score Percentage:</span>
+                  <span style={{ color: scanResult.isHighRisk ? '#ff003c' : '#34d399', fontSize: '0.95rem' }}>
+                    {scanResult.score}% {scanResult.isHighRisk ? '(HIGH RISK PROBABILITY)' : '(LOW RISK / SAFE)'}
+                  </span>
+                </div>
+                <div style={{ height: '10px', width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${scanResult.score}%`,
+                      backgroundColor: scanResult.isHighRisk ? '#ff003c' : '#10b981',
+                      boxShadow: scanResult.isHighRisk ? '0 0 14px #ff003c' : '0 0 14px #10b981',
+                      transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Matched Illegal Keywords Alert Banner (If Any Present) */}
+              {scanResult.hasIllegalWords ? (
+                <div
+                  style={{
+                    padding: '14px 18px',
+                    backgroundColor: 'rgba(255, 0, 60, 0.14)',
+                    border: '1px solid rgba(255, 0, 60, 0.45)',
+                    borderRadius: '10px',
+                    boxShadow: 'inset 0 0 20px rgba(255, 0, 60, 0.1)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.82rem',
+                      fontWeight: 800,
+                      color: '#ff4d6d',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      marginBottom: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <AlertTriangle size={16} color="#ff003c" />
+                    MATCHED ILLEGAL / ADVERSARY THREAT KEYWORDS ({scanResult.matchedWords.length}) — ELEVATED TO HIGH RISK:
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {scanResult.matchedWords.map((kw, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          padding: '5px 12px',
+                          backgroundColor: 'rgba(255, 0, 60, 0.25)',
+                          border: '1px solid #ff003c',
+                          borderRadius: '6px',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
+                          boxShadow: '0 0 10px rgba(255, 0, 60, 0.4)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <span style={{ color: '#ff003c' }}>⚠</span> {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: '12px 18px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <ShieldCheck size={22} color="#34d399" />
+                  <div>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#34d399' }}>
+                      VERIFIED CLEAN: ZERO ILLEGAL KEYWORDS DETECTED
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#a7f3d0' }}>
+                      No ransomware, exploit kits, hacking tools, carding markets, or credential theft signatures identified.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Heuristic Breakdown Findings */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px', marginTop: '2px' }}>
                 {scanResult.flags.map((flag, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    <span style={{ color: scanResult.score > 50 ? '#fb7185' : '#34d399' }}>•</span>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ color: scanResult.isHighRisk ? '#ff003c' : '#34d399', fontWeight: 700, lineHeight: 1 }}>•</span>
                     <span>{flag}</span>
                   </div>
                 ))}
@@ -1882,6 +1994,54 @@ export const LandingPage = () => {
         </div>
       </section>
 
-    </div>
+      </div>
+
+      {/* Interactive Cyber HUD Back-to-Top Floating Trigger */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          title="Elevate to top of Landing Page"
+          style={{
+            position: 'fixed',
+            bottom: '32px',
+            right: '32px',
+            zIndex: 9999,
+            backgroundColor: 'rgba(3, 7, 18, 0.92)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(0, 242, 254, 0.5)',
+            boxShadow: '0 0 20px rgba(0, 242, 254, 0.35), inset 0 0 10px rgba(0, 242, 254, 0.1)',
+            borderRadius: '8px',
+            color: '#00f2fe',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-mono, monospace)',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            letterSpacing: '1px',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.borderColor = '#ff003c';
+            e.currentTarget.style.boxShadow = '0 0 25px rgba(255, 0, 60, 0.5), inset 0 0 10px rgba(255, 0, 60, 0.2)';
+            e.currentTarget.style.color = '#ff4d6d';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.borderColor = 'rgba(0, 242, 254, 0.5)';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 242, 254, 0.35), inset 0 0 10px rgba(0, 242, 254, 0.1)';
+            e.currentTarget.style.color = '#00f2fe';
+          }}
+        >
+          <ChevronUp size={16} />
+          <span>TOP // 0x00</span>
+        </button>
+      )}
+    </>
   );
 };

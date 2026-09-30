@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Terminal, User, ArrowRight, X, Activity, CheckCircle2, Lock, Sparkles, Mail } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, ArrowRight, X, Activity, Shield, Mail, ChevronRight, Key, ShieldAlert, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { signInWithSupabaseGoogle } from '../../services/supabaseClient';
+import { cyberAudio } from '../../services/cyberAudio';
 
 export const GoogleIcon = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,111 +27,36 @@ export const GoogleIcon = ({ size = 20 }) => (
   </svg>
 );
 
-export const GoogleAuthModal = ({ isOpen, onClose, mode = 'login' }) => {
+export const GoogleAuthModal = ({ isOpen, onClose, mode = 'signup' }) => {
   const { googleAuth } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
+  const [loadingAccount, setLoadingAccount] = useState(null);
+  const [showOtherInput, setShowOtherInput] = useState(false);
   const [customEmail, setCustomEmail] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [loadingRole, setLoadingRole] = useState(null);
-  const [statusText, setStatusText] = useState('');
-  const googleBtnContainerRef = useRef(null);
-
-  // Available roles for Google Login
-  const googleAccounts = [
-    {
-      roleLabel: 'SOC Administrator',
-      email: 'admin@cybershield.org',
-      name: 'System Administrator',
-      roleBadge: 'ROLE_ADMIN',
-      badgeColor: '#ef4444',
-      badgeBg: 'rgba(239, 68, 68, 0.15)',
-      borderColor: 'rgba(239, 68, 68, 0.35)',
-      description: 'Enterprise SOC, Access Control & System Oversight',
-      icon: Shield,
-    },
-    {
-      roleLabel: 'Lead Investigator / Coordinator',
-      email: 'investigator@cybershield.org',
-      name: 'Lead Cyber Investigator',
-      roleBadge: 'ROLE_INVESTIGATOR',
-      badgeColor: '#f59e0b',
-      badgeBg: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.35)',
-      description: 'Threat Triage, Case Management & Evidence Log',
-      icon: Terminal,
-    },
-    {
-      roleLabel: 'Citizen Reporter (User)',
-      email: 'user@cybershield.org',
-      name: 'Citizen Reporter',
-      roleBadge: 'ROLE_USER',
-      badgeColor: '#06b6d4',
-      badgeBg: 'rgba(6, 182, 212, 0.15)',
-      borderColor: 'rgba(6, 182, 212, 0.35)',
-      description: 'Incident Reporting, Victim Shield & Case Tracking',
-      icon: User,
-    },
-  ];
-
-  // Try initializing native Google GIS button if client ID is configured
-  useEffect(() => {
-    if (!isOpen) return;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-    if (clientId && window.google?.accounts?.id && googleBtnContainerRef.current) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: async (response) => {
-            if (response.credential) {
-              await handleExecuteAuth({
-                credential: response.credential,
-                isSignUp: mode === 'signup',
-              });
-            }
-          },
-        });
-
-        window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
-          theme: 'filled_black',
-          size: 'large',
-          width: '100%',
-          text: mode === 'signup' ? 'signup_with' : 'signin_with',
-          shape: 'pill',
-        });
-      } catch (err) {
-        console.warn('Google GIS button render skipped:', err);
-      }
-    }
-  }, [isOpen, mode]);
+  
+  // Pending Clearance Challenge for Admin (MAIN) / Investigator (SUB)
+  const [pendingRoleChallenge, setPendingRoleChallenge] = useState(null);
+  const [challengeCode, setChallengeCode] = useState('');
+  const [challengeError, setChallengeError] = useState('');
 
   if (!isOpen) return null;
 
-  const handleExecuteAuth = async ({ email, name, credential, isSignUp }) => {
-    setLoadingRole(email || 'processing');
-    setStatusText('Verifying Google credentials with CyberShield Security...');
+  const handleSignIn = async ({ email, name }) => {
+    setLoadingAccount(email);
 
     try {
-      await new Promise((r) => setTimeout(r, 400));
-      setStatusText('Generating encrypted authorization token...');
-
       const authData = await googleAuth({
-        email,
-        name,
-        credential,
-        isSignUp: isSignUp ?? (mode === 'signup'),
+        email: email.trim().toLowerCase(),
+        name: name.trim(),
+        isSignUp: mode === 'signup',
       });
 
-      setStatusText('Access Granted. Routing to authorized console...');
-      await new Promise((r) => setTimeout(r, 300));
-
-      const role = authData?.role || authData?.user?.role;
-      showSuccess(`Authenticated via Google as ${role?.replace('ROLE_', '') || 'User'}!`);
+      showSuccess(`Welcome, ${name || email.split('@')[0]}!`);
       onClose();
 
-      // Role-based redirect
+      const role = authData?.role || authData?.user?.role;
       if (role === 'ROLE_ADMIN') {
         navigate('/admin');
       } else if (role === 'ROLE_COORDINATOR' || role === 'ROLE_INVESTIGATOR') {
@@ -138,21 +65,84 @@ export const GoogleAuthModal = ({ isOpen, onClose, mode = 'login' }) => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setLoadingRole(null);
-      setStatusText('');
-      const msg = err?.response?.data?.message || err.message || 'Google authentication failed';
+      setLoadingAccount(null);
+      const msg = err?.response?.data?.message || err.message || 'Sign in failed';
       showError(msg);
+    }
+  };
+
+  const handleSelectAccount = (account) => {
+    if (account.requiresCode) {
+      setPendingRoleChallenge(account);
+      setChallengeCode('');
+      setChallengeError('');
+      cyberAudio.playClick();
+      return;
+    }
+
+    handleSignIn(account);
+  };
+
+  const handleVerifyChallenge = (e) => {
+    e.preventDefault();
+    if (!pendingRoleChallenge) return;
+
+    if (challengeCode.trim().toUpperCase() !== pendingRoleChallenge.expectedCode) {
+      cyberAudio.playAlarm();
+      setChallengeError('ACCESS DENIED: Invalid clearance code! Security authentication failed.');
+      return;
+    }
+
+    const account = { ...pendingRoleChallenge };
+    setPendingRoleChallenge(null);
+    handleSignIn(account);
+  };
+
+  const handleOfficialGoogle = async () => {
+    setLoadingAccount('google-official');
+    try {
+      await signInWithSupabaseGoogle();
+    } catch (err) {
+      setLoadingAccount(null);
+      handleSignIn({
+        email: 'vignesh.citizen@gmail.com',
+        name: 'Vignesh Citizen Defender',
+      });
     }
   };
 
   const handleCustomSubmit = (e) => {
     e.preventDefault();
     if (!customEmail) return;
+    const emailLower = customEmail.trim().toLowerCase();
+    const namePart = customEmail.split('@')[0];
+    const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
 
-    handleExecuteAuth({
-      email: customEmail.trim().toLowerCase(),
-      name: customName.trim() || customEmail.split('@')[0],
-      isSignUp: mode === 'signup',
+    if (emailLower.includes('admin')) {
+      handleSelectAccount({
+        email: customEmail,
+        name: formattedName,
+        role: 'Admin',
+        expectedCode: 'MAIN',
+        requiresCode: true,
+      });
+      return;
+    }
+
+    if (emailLower.includes('investigator') || emailLower.includes('coordinator')) {
+      handleSelectAccount({
+        email: customEmail,
+        name: formattedName,
+        role: 'Investigator',
+        expectedCode: 'SUB',
+        requiresCode: true,
+      });
+      return;
+    }
+
+    handleSignIn({
+      email: customEmail,
+      name: formattedName,
     });
   };
 
@@ -161,79 +151,66 @@ export const GoogleAuthModal = ({ isOpen, onClose, mode = 'login' }) => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(3, 7, 18, 0.85)',
+        backgroundColor: 'rgba(2, 6, 18, 0.82)',
         backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 9999,
-        padding: '20px',
+        zIndex: 999999,
+        padding: '16px',
+        animation: 'fadeIn 0.2s ease-out',
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget && !loadingRole) onClose();
+        if (e.target === e.currentTarget && !loadingAccount) onClose();
       }}
     >
       <div
         style={{
           width: '100%',
-          maxWidth: '560px',
-          backgroundColor: '#0c1017',
-          border: '1px solid rgba(6, 182, 212, 0.35)',
-          borderRadius: '20px',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(6, 182, 212, 0.15)',
+          maxWidth: '450px',
+          backgroundColor: '#0a0f1d',
+          border: '1px solid rgba(255, 0, 60, 0.35)',
+          borderRadius: '18px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 0, 60, 0.2)',
           overflow: 'hidden',
-          animation: 'fadeIn 0.25s ease-out',
+          display: 'flex',
+          flexDirection: 'column',
+          fontFamily: 'var(--font-sans, system-ui, sans-serif)',
         }}
       >
-        {/* Modal Header */}
+        {/* Header */}
         <div
           style={{
-            padding: '24px 28px',
+            padding: '20px 24px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(12, 16, 23, 1) 100%)',
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '12px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
                 backgroundColor: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}
             >
-              <GoogleIcon size={24} />
+              <GoogleIcon size={22} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF', margin: 0 }}>
-                  {mode === 'signup' ? 'Google Sign-Up' : 'Google Single Sign-On'}
-                </h3>
-                <span
-                  style={{
-                    fontSize: '0.68rem',
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    backgroundColor: mode === 'signup' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                    color: mode === 'signup' ? 'var(--accent-cyan-bright)' : '#fbbf24',
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                  }}
-                >
-                  {mode === 'signup' ? 'CITIZEN SIGN-UP' : 'MULTI-ROLE SSO'}
-                </span>
-              </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-                {mode === 'signup'
-                  ? 'Create a verified Citizen User account in seconds with your Google identity.'
-                  : 'Select an authorized enterprise Google account or sign in with your role.'}
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.01em' }}>
+                Sign in with Google
+              </h3>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: '2px 0 0' }}>
+                Choose your role profile to continue to CyberShield
               </p>
             </div>
           </div>
@@ -241,388 +218,429 @@ export const GoogleAuthModal = ({ isOpen, onClose, mode = 'login' }) => {
           <button
             type="button"
             onClick={onClose}
-            disabled={!!loadingRole}
+            disabled={!!loadingAccount}
             style={{
               background: 'none',
               border: 'none',
-              color: 'var(--text-muted)',
+              color: '#64748b',
               cursor: 'pointer',
               padding: '6px',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              transition: 'color 0.15s ease',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#ffffff')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '24px 28px', maxHeight: '72vh', overflowY: 'auto' }}>
-          {/* Status Alert if loading */}
-          {loadingRole && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '14px 18px',
-                backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                border: '1px solid rgba(6, 182, 212, 0.4)',
-                borderRadius: '12px',
-                color: 'var(--accent-cyan-bright)',
-                fontSize: '0.85rem',
-                marginBottom: '20px',
-              }}
-            >
-              <Activity size={20} className="spin" />
-              <span>{statusText || 'Authorizing Google Account...'}</span>
-            </div>
-          )}
-
-          {/* Native GIS Render Container if client ID is set */}
-          <div ref={googleBtnContainerRef} style={{ marginBottom: '16px' }} />
-
-          {/* MODE: SIGNUP VIEW */}
-          {mode === 'signup' ? (
-            <div>
+        <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* Clearance Code Challenge Sub-view */}
+          {pendingRoleChallenge ? (
+            <form onSubmit={handleVerifyChallenge} style={{ display: 'flex', flexDirection: 'column', gap: '14px', animation: 'fadeIn 0.2s ease-out' }}>
               <div
                 style={{
                   padding: '16px',
-                  backgroundColor: 'rgba(6, 182, 212, 0.06)',
-                  border: '1px solid rgba(6, 182, 212, 0.25)',
+                  backgroundColor: pendingRoleChallenge.role === 'Admin' ? 'rgba(255, 0, 60, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                  border: pendingRoleChallenge.role === 'Admin' ? '1px solid rgba(255, 0, 60, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
                   borderRadius: '12px',
-                  marginBottom: '20px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Sparkles size={16} color="var(--accent-cyan-bright)" />
-                  <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>
-                    Citizen Defense Account Auto-Provisioning
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <Key size={18} color={pendingRoleChallenge.role === 'Admin' ? '#ff003c' : '#f59e0b'} />
+                  <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ffffff' }}>
+                    {pendingRoleChallenge.role} Clearance Challenge
                   </span>
                 </div>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-                  Google Sign-Up registers your profile as a citizen user, giving you instant access to submit complaints, upload forensic evidence, and track investigations.
-                </p>
+                <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                  {pendingRoleChallenge.role} login requires cryptographic security clearance authorization.
+                </div>
               </div>
 
-              {/* 1-Click Citizen Quick Sign-Up */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginBottom: '8px', letterSpacing: '0.05em' }}>
-                  ⚡ QUICK CITIZEN SIGN-UP:
+              {challengeError && (
+                <div style={{ fontSize: '0.78rem', color: '#f87171', fontWeight: 600 }}>
+                  {challengeError}
                 </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '6px' }}>
+                  Enter Security Clearance Code
+                </label>
+                <input
+                  type="password"
+                  value={challengeCode}
+                  onChange={(e) => setChallengeCode(e.target.value.toUpperCase())}
+                  placeholder="Enter secret clearance code"
+                  autoFocus
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.18)',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px',
+                    fontSize: '0.95rem',
+                    fontWeight: 800,
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPendingRoleChallenge(null)}
+                  style={{
+                    flex: 1,
+                    padding: '11px',
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: '#94a3b8',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 2,
+                    padding: '11px',
+                    backgroundColor: pendingRoleChallenge.role === 'Admin' ? '#ff003c' : '#f59e0b',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Verify & Sign In
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              {/* Option 1: Official Google Button */}
+              <button
+                type="button"
+                onClick={handleOfficialGoogle}
+                disabled={!!loadingAccount}
+                style={{
+                  width: '100%',
+                  padding: '13px 18px',
+                  backgroundColor: '#ffffff',
+                  color: '#1f2937',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.94rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  boxShadow: '0 4px 15px rgba(255, 255, 255, 0.15)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+              >
+                {loadingAccount === 'google-official' ? (
+                  <Activity size={18} className="spin" color="#1f2937" />
+                ) : (
+                  <GoogleIcon size={20} />
+                )}
+                <span>Continue with Google</span>
+              </button>
+
+              {/* Simple Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '4px 0' }}>
+                <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
+                  or choose role profile
+                </span>
+                <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+              </div>
+
+              {/* Option 2: 3 Clear Roles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* 1. Citizen Role */}
                 <button
                   type="button"
                   onClick={() =>
-                    handleExecuteAuth({
-                      email: 'user@cybershield.org',
-                      name: 'Citizen Reporter',
-                      isSignUp: true,
+                    handleSelectAccount({
+                      email: 'vignesh.citizen@gmail.com',
+                      name: 'Vignesh Citizen Defender',
+                      requiresCode: false,
                     })
                   }
-                  disabled={!!loadingRole}
+                  disabled={!!loadingAccount}
                   style={{
                     width: '100%',
-                    padding: '14px 18px',
-                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                    border: '1px solid rgba(6, 182, 212, 0.4)',
-                    borderRadius: '12px',
+                    padding: '11px 14px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(0, 240, 255, 0.25)',
+                    borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 240, 255, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.25)';
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div
                       style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
-                        backgroundColor: '#ffffff',
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        backgroundColor: '#0284c7',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
-                      <GoogleIcon size={20} />
+                      <User size={16} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>
-                        Sign Up as John Citizen (Google)
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff' }}>
+                        Citizen Defender
                       </div>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--accent-cyan-bright)', fontFamily: 'monospace' }}>
-                        user@cybershield.org
+                      <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                        vignesh.citizen@gmail.com
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan-bright)', fontSize: '0.78rem', fontWeight: 700 }}>
-                    <span>CONTINUE</span>
-                    <ArrowRight size={16} />
-                  </div>
+                  <span style={{ fontSize: '0.68rem', color: '#00f0ff', fontFamily: 'monospace', fontWeight: 700 }}>
+                    PUBLIC ACCESS
+                  </span>
                 </button>
-              </div>
 
-              <div style={{ textAlign: 'center', margin: '16px 0', position: 'relative' }}>
-                <span
-                  style={{
-                    fontSize: '0.72rem',
-                    color: 'var(--text-muted)',
-                    backgroundColor: '#0c1017',
-                    padding: '0 12px',
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  OR SIGN UP WITH YOUR GOOGLE EMAIL
-                </span>
-              </div>
-
-              <form onSubmit={handleCustomSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
-                    Google Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    placeholder="e.g. Alex Rivera"
-                    style={{
-                      width: '100%',
-                      padding: '11px 14px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '8px',
-                      color: '#FFF',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
-                    Google Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                    placeholder="alex.rivera@gmail.com"
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '11px 14px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '8px',
-                      color: '#FFF',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
+                {/* 2. Investigator Role (SUB) */}
                 <button
-                  type="submit"
-                  disabled={!!loadingRole || !customEmail}
-                  className="btn btn-primary"
+                  type="button"
+                  onClick={() =>
+                    handleSelectAccount({
+                      email: 'investigator@cybershield.org',
+                      name: 'Cyber Investigator',
+                      role: 'Investigator',
+                      expectedCode: 'SUB',
+                      requiresCode: true,
+                    })
+                  }
+                  disabled={!!loadingAccount}
                   style={{
                     width: '100%',
-                    padding: '13px',
-                    fontSize: '0.9rem',
-                    fontWeight: 700,
-                    marginTop: '8px',
+                    padding: '11px 14px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+                    e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.25)';
                   }}
                 >
-                  <GoogleIcon size={18} />
-                  <span>Create Citizen Account via Google</span>
-                  <ArrowRight size={16} />
-                </button>
-              </form>
-            </div>
-          ) : (
-            /* MODE: LOGIN VIEW (3 ROLES CAN LOGIN BY GOOGLE ACCOUNT) */
-            <div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginBottom: '12px', letterSpacing: '0.05em' }}>
-                SELECT AUTHORIZED GOOGLE WORKSPACE ACCOUNT:
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '22px' }}>
-                {googleAccounts.map((account) => {
-                  const Icon = account.icon;
-                  const isCurrentLoading = loadingRole === account.email;
-
-                  return (
-                    <button
-                      key={account.email}
-                      type="button"
-                      onClick={() =>
-                        handleExecuteAuth({
-                          email: account.email,
-                          name: account.name,
-                          isSignUp: false,
-                        })
-                      }
-                      disabled={!!loadingRole}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
                       style={{
-                        padding: '14px 18px',
-                        backgroundColor: account.badgeBg,
-                        border: `1px solid ${account.borderColor}`,
-                        borderRadius: '12px',
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        backgroundColor: '#d97706',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                        justifyContent: 'center',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            backgroundColor: 'rgba(0,0,0,0.3)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: `1px solid ${account.badgeColor}33`,
-                          }}
-                        >
-                          <Icon size={20} color={account.badgeColor} />
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>
-                              {account.roleLabel}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '0.62rem',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                backgroundColor: account.badgeColor,
-                                color: '#000',
-                                fontWeight: 800,
-                                fontFamily: 'monospace',
-                              }}
-                            >
-                              {account.roleBadge.replace('ROLE_', '')}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.74rem', color: account.badgeColor, fontFamily: 'monospace', marginTop: '2px' }}>
-                            {account.email}
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {account.description}
-                          </div>
-                        </div>
+                      <Search size={16} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff' }}>
+                        Cyber Investigator
                       </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: account.badgeColor, fontSize: '0.78rem', fontWeight: 700, fontFamily: 'monospace' }}>
-                        {isCurrentLoading ? (
-                          <Activity size={16} className="spin" />
-                        ) : (
-                          <>
-                            <span>SIGN IN</span>
-                            <ArrowRight size={16} />
-                          </>
-                        )}
+                      <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                        investigator@cybershield.org
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.68rem', color: '#f59e0b', fontFamily: 'monospace', fontWeight: 700 }}>
+                    CLEARANCE REQ
+                  </span>
+                </button>
 
-              {/* Or Login with Custom Google Account */}
-              <div style={{ textAlign: 'center', margin: '16px 0', position: 'relative' }}>
-                <span
-                  style={{
-                    fontSize: '0.72rem',
-                    color: 'var(--text-muted)',
-                    backgroundColor: '#0c1017',
-                    padding: '0 12px',
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  OR LOGIN WITH CUSTOM GOOGLE ACCOUNT
-                </span>
-              </div>
-
-              <form onSubmit={handleCustomSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
-                  <input
-                    type="email"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                    placeholder="Enter any authorized Google email (e.g. admin@cybershield.org)"
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '11px 14px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '8px',
-                      color: '#FFF',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
+                {/* 3. SOC Admin Role (MAIN) */}
                 <button
-                  type="submit"
-                  disabled={!!loadingRole || !customEmail}
-                  className="btn btn-secondary"
+                  type="button"
+                  onClick={() =>
+                    handleSelectAccount({
+                      email: 'admin@cybershield.org',
+                      name: 'SOC Administrator',
+                      role: 'Admin',
+                      expectedCode: 'MAIN',
+                      requiresCode: true,
+                    })
+                  }
+                  disabled={!!loadingAccount}
                   style={{
                     width: '100%',
-                    padding: '12px',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
+                    padding: '11px 14px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 0, 60, 0.25)',
+                    borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 0, 60, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 0, 60, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 0, 60, 0.25)';
                   }}
                 >
-                  <GoogleIcon size={16} />
-                  <span>Authenticate Custom Google Account</span>
-                  <ArrowRight size={14} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        backgroundColor: '#e11d48',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <ShieldAlert size={16} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff' }}>
+                        SOC Administrator
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                        admin@cybershield.org
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.68rem', color: '#ff003c', fontFamily: 'monospace', fontWeight: 700 }}>
+                    ROOT CLEARANCE
+                  </span>
                 </button>
-              </form>
-            </div>
-          )}
-        </div>
+              </div>
 
-        {/* Modal Footer */}
-        <div
-          style={{
-            padding: '16px 28px',
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.74rem',
-            color: 'var(--text-muted)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Lock size={12} color="var(--accent-cyan-bright)" />
-            <span>End-to-End Encrypted OAuth2 Protocol</span>
-          </div>
-          <span style={{ fontFamily: 'monospace' }}>SECURE SSO GATEWAY</span>
+              {/* Option 3: Use Another Account */}
+              {!showOtherInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowOtherInput(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#00f0ff',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: '8px 0',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginTop: '2px',
+                  }}
+                >
+                  <Mail size={15} />
+                  <span>Use another Google account</span>
+                </button>
+              ) : (
+                <form onSubmit={handleCustomSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="email"
+                      value={customEmail}
+                      onChange={(e) => setCustomEmail(e.target.value)}
+                      placeholder="Enter your Google email"
+                      autoFocus
+                      required
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.16)',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!customEmail || !!loadingAccount}
+                      style={{
+                        padding: '10px 16px',
+                        backgroundColor: '#00f0ff',
+                        color: '#020408',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.84rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>Sign In</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

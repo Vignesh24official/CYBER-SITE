@@ -267,7 +267,7 @@ export const CyberCursor = () => {
                 ? `linear-gradient(90deg, transparent 0%, rgba(255,0,60,0.2) 20%, rgba(255,0,60,0.85) 50%, rgba(255,0,60,0.2) 80%, transparent 100%)`
                 : `linear-gradient(90deg, transparent 0%, rgba(0,242,254,0.15) 30%, rgba(255,0,60,0.55) 50%, rgba(0,242,254,0.15) 70%, transparent 100%)`,
               pointerEvents: 'none',
-              zIndex: 99988,
+              zIndex: 2147483643,
               boxShadow: isHovered ? '0 0 8px rgba(255, 0, 60, 0.7)' : '0 0 5px rgba(255, 0, 60, 0.35)',
               transition: 'background 0.15s ease',
             }}
@@ -285,7 +285,7 @@ export const CyberCursor = () => {
                 ? `linear-gradient(180deg, transparent 0%, rgba(255,0,60,0.2) 20%, rgba(255,0,60,0.85) 50%, rgba(255,0,60,0.2) 80%, transparent 100%)`
                 : `linear-gradient(180deg, transparent 0%, rgba(0,242,254,0.15) 30%, rgba(255,0,60,0.55) 50%, rgba(0,242,254,0.15) 70%, transparent 100%)`,
               pointerEvents: 'none',
-              zIndex: 99988,
+              zIndex: 2147483643,
               boxShadow: isHovered ? '0 0 8px rgba(255, 0, 60, 0.7)' : '0 0 5px rgba(255, 0, 60, 0.35)',
               transition: 'background 0.15s ease',
             }}
@@ -302,7 +302,7 @@ export const CyberCursor = () => {
               color: isHovered ? '#ff003c' : 'rgba(0, 242, 254, 0.7)',
               letterSpacing: '0.06em',
               pointerEvents: 'none',
-              zIndex: 99989,
+              zIndex: 2147483644,
               userSelect: 'none',
             }}
           >
@@ -334,7 +334,7 @@ export const CyberCursor = () => {
               boxShadow: `0 0 ${size * 2.2}px ${color}`,
               opacity: opacity,
               pointerEvents: 'none',
-              zIndex: 99990 - idx,
+              zIndex: 2147483645 - idx,
             }}
           />
         );
@@ -359,7 +359,7 @@ export const CyberCursor = () => {
               boxShadow: '0 0 35px #ff003c, inset 0 0 20px #ff003c',
               animation: 'scary-click-blast 0.65s cubic-bezier(0.12, 0.8, 0.32, 1) forwards',
               pointerEvents: 'none',
-              zIndex: 99995,
+              zIndex: 2147483646,
             }}
           />
           {/* Secondary Cyan Fractured Ring */}
@@ -376,7 +376,7 @@ export const CyberCursor = () => {
               boxShadow: '0 0 25px #00f2fe',
               animation: 'scary-click-blast-secondary 0.75s cubic-bezier(0.1, 0.7, 0.2, 1) forwards',
               pointerEvents: 'none',
-              zIndex: 99994,
+              zIndex: 2147483646,
             }}
           />
         </React.Fragment>
@@ -392,7 +392,7 @@ export const CyberCursor = () => {
           top: `${pos.y}px`,
           transform: 'translate(-50%, -50%)',
           pointerEvents: 'none',
-          zIndex: 99999,
+          zIndex: 2147483647,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

@@ -95,14 +95,14 @@ export const RegisterPage = () => {
       <div className="register-card-container">
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ marginBottom: '16px' }}>
-            <CyberShieldSecurityPulse statusText="NEW CITIZEN / USER REGISTRATION" />
+            <CyberShieldSecurityPulse statusText="PORTAL REGISTRATION // DEFCON 1" threat={true} />
           </div>
 
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>
-            Create Your CyberShield Account
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#FFF', marginBottom: '8px' }}>
+            Initialize <span style={{ color: '#ff003c', textShadow: '0 0 10px #ff003c' }}>CyberShield</span> Identity
           </h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: '480px', margin: '0 auto' }}>
-            Join the enterprise security ecosystem to securely report incidents, track investigations, and access cyber defense resources.
+            Register your classified citizen or operative profile into the Supabase database to report cyber attacks and access threat defense protocols.
           </p>
         </div>
 
@@ -164,10 +164,10 @@ export const RegisterPage = () => {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Full Name */}
+          {/* Name */}
           <div>
             <label style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-              Full Name
+              Name
             </label>
             <div style={{ position: 'relative' }}>
               <User size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
@@ -175,7 +175,7 @@ export const RegisterPage = () => {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
+                placeholder="Enter your name"
                 required
                 style={{
                   width: '100%',
@@ -203,7 +203,7 @@ export const RegisterPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@example.com"
+                  placeholder="Enter your email"
                   required
                   style={{
                     width: '100%',
@@ -229,7 +229,7 @@ export const RegisterPage = () => {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1-800-555-0199"
+                  placeholder="Enter your phone number"
                   required
                   style={{
                     width: '100%',
@@ -258,7 +258,7 @@ export const RegisterPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="Enter your password"
                   required
                   style={{
                     width: '100%',
@@ -300,7 +300,7 @@ export const RegisterPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="Confirm your password"
                   required
                   style={{
                     width: '100%',

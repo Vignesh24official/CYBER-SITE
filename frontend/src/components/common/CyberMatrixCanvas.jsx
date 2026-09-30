@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
+export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.75 }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -19,8 +19,8 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
     };
     window.addEventListener('resize', handleResize);
 
-    // Mouse coordinates for interactive repulsion / connection
-    let mouse = { x: -1000, y: -1000, radius: 140 };
+    // Mouse coordinates for interactive scary pulse
+    let mouse = { x: -1000, y: -1000, radius: 150 };
     const handleMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
       mouse.x = e.clientX - rect.left;
@@ -37,48 +37,74 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
       parent.addEventListener('mouseleave', handleMouseLeave);
     }
 
-    // 1. Cyber Nodes
-    const nodeCount = Math.floor(Math.min(width, 1200) / 18);
+    // 1. Cyber Nodes: 50% Electric Blue (Defense) & 50% Sinister Red (Threat)
+    const nodeCount = Math.floor(Math.min(width, 1200) / 16);
     const nodes = [];
-    const colors = ['#00f2fe', '#38bdf8', '#3b82f6', '#818cf8'];
+    const colors = [
+      '#ff003c', // Blood Threat Red
+      '#ff1744', // Crimson Alert
+      '#00f0ff', // High Voltage Blue
+      '#38bdf8', // Neon Sky Blue
+      '#0066ff', // Deep Cyber Cobalt
+    ];
 
     for (let i = 0; i < nodeCount; i++) {
+      const isRedTeam = Math.random() < 0.45;
       nodes.push({
         x: Math.random() * width,
         y: Math.random() * heightPx,
-        vx: (Math.random() - 0.5) * 0.7,
-        vy: (Math.random() - 0.5) * 0.7,
-        radius: Math.random() * 2 + 1.2,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 0.75,
+        vy: (Math.random() - 0.5) * 0.75,
+        radius: Math.random() * 2.2 + 1.2,
+        color: isRedTeam ? (Math.random() > 0.5 ? '#ff003c' : '#ff1744') : (Math.random() > 0.5 ? '#00f0ff' : '#0066ff'),
+        isRedTeam,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.03 + Math.random() * 0.02,
+        pulseSpeed: 0.035 + Math.random() * 0.025,
       });
     }
 
-    // 2. Data Packets (flying light pulses along connections)
+    // 2. Data Packets (Flying red attack bursts and blue defense pulses)
     const packets = [];
     const createPacket = (fromNode, toNode) => {
+      const isRed = fromNode.isRedTeam || toNode.isRedTeam;
       packets.push({
         from: fromNode,
         to: toNode,
         progress: 0,
-        speed: 0.015 + Math.random() * 0.02,
-        color: '#00f2fe',
-        size: 2.5,
+        speed: 0.02 + Math.random() * 0.025,
+        color: isRed ? '#ff003c' : '#00f0ff',
+        size: isRed ? 2.8 : 2.2,
       });
     };
 
-    // 3. Floating Cyber Hex Symbols
-    const cyberTokens = ['0xFA', 'SHA256', 'AES-GCM', '10.0.1.4', 'PORT:443', 'ZERO_TRUST', 'TLS1.3', 'SEALED', '0x8B', 'ENCRYPT'];
+    // 3. Floating Scary Hacker Tokens
+    const cyberTokens = [
+      '☠ ROOT_OVERRIDE',
+      '0xFA_BREACH',
+      'CVE-2026-4421',
+      'PORT:443_EXPLOIT',
+      'ZERO_DAY_PAYLOAD',
+      'C2_BEACON:ACTIVE',
+      'TLS_STRIP',
+      'BUFFER_OVERFLOW',
+      'SYN_FLOOD',
+      'BLUE_CIPHER:LOCKED',
+      'RED_INTRUSION:ENGAGED',
+      'AES-256-GCM',
+      'MEMORY_DUMP:0x8B',
+      'SHIELD_DEFENSE:ONLINE',
+    ];
+
     const floatingTokens = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 16; i++) {
+      const isRed = Math.random() > 0.5;
       floatingTokens.push({
         text: cyberTokens[Math.floor(Math.random() * cyberTokens.length)],
         x: Math.random() * width,
         y: Math.random() * heightPx,
-        vy: -0.25 - Math.random() * 0.4,
-        alpha: 0.15 + Math.random() * 0.25,
-        fadeSpeed: 0.002,
+        vy: -0.3 - Math.random() * 0.45,
+        alpha: 0.2 + Math.random() * 0.35,
+        color: isRed ? '#ff003c' : '#00f0ff',
         size: 9 + Math.floor(Math.random() * 4),
       });
     }
@@ -88,7 +114,7 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
     const render = (time) => {
       ctx.clearRect(0, 0, width, heightPx);
 
-      // A. Update and Draw Floating Cyber Tokens
+      // A. Floating Scary Cyber Tokens
       ctx.font = '10px "JetBrains Mono", monospace';
       floatingTokens.forEach((tok) => {
         tok.y += tok.vy;
@@ -96,8 +122,9 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
           tok.y = heightPx + 20;
           tok.x = Math.random() * width;
           tok.text = cyberTokens[Math.floor(Math.random() * cyberTokens.length)];
+          tok.color = Math.random() > 0.5 ? '#ff003c' : '#00f0ff';
         }
-        ctx.fillStyle = `rgba(56, 189, 248, ${tok.alpha})`;
+        ctx.fillStyle = tok.color === '#ff003c' ? `rgba(255, 0, 60, ${tok.alpha})` : `rgba(0, 240, 255, ${tok.alpha})`;
         ctx.fillText(tok.text, tok.x, tok.y);
       });
 
@@ -114,21 +141,23 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
 
         n.pulse += n.pulseSpeed;
 
-        // Mouse interaction: push away gently or attract
+        // Mouse interaction: push away gently or draw dual laser beam
         const dx = mouse.x - n.x;
         const dy = mouse.y - n.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < mouse.radius) {
           const force = (mouse.radius - dist) / mouse.radius;
-          n.x -= (dx / dist) * force * 2;
-          n.y -= (dy / dist) * force * 2;
+          n.x -= (dx / dist) * force * 2.2;
+          n.y -= (dy / dist) * force * 2.2;
 
-          // Connect to mouse with neon beam
+          // Connect to mouse with dual Red/Blue neon beam
           ctx.beginPath();
           ctx.moveTo(n.x, n.y);
           ctx.lineTo(mouse.x, mouse.y);
-          ctx.strokeStyle = `rgba(0, 242, 254, ${(1 - dist / mouse.radius) * 0.6})`;
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = n.isRedTeam
+            ? `rgba(255, 0, 60, ${(1 - dist / mouse.radius) * 0.75})`
+            : `rgba(0, 240, 255, ${(1 - dist / mouse.radius) * 0.75})`;
+          ctx.lineWidth = 1.2;
           ctx.stroke();
         }
       }
@@ -144,16 +173,26 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxDistance) {
-            const alpha = (1 - dist / maxDistance) * 0.22;
+            const alpha = (1 - dist / maxDistance) * 0.28;
             ctx.beginPath();
             ctx.moveTo(n1.x, n1.y);
             ctx.lineTo(n2.x, n2.y);
-            ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
-            ctx.lineWidth = 0.85;
+
+            // If Red vs Blue: purple-crimson threat clash line!
+            if (n1.isRedTeam && n2.isRedTeam) {
+              ctx.strokeStyle = `rgba(255, 0, 60, ${alpha * 1.2})`;
+            } else if (!n1.isRedTeam && !n2.isRedTeam) {
+              ctx.strokeStyle = `rgba(0, 240, 255, ${alpha * 1.2})`;
+            } else {
+              // Clash line: purple/magenta cyber warfare
+              ctx.strokeStyle = `rgba(217, 70, 239, ${alpha * 1.4})`;
+            }
+
+            ctx.lineWidth = 0.9;
             ctx.stroke();
 
             // Randomly spawn data packet between connected nodes
-            if (time - lastPacketTime > 600 && Math.random() < 0.015 && packets.length < 16) {
+            if (time - lastPacketTime > 400 && Math.random() < 0.02 && packets.length < 20) {
               createPacket(n1, n2);
               lastPacketTime = time;
             }
@@ -176,23 +215,23 @@ export const CyberMatrixCanvas = ({ height = '100%', opacity = 0.65 }) => {
 
         ctx.beginPath();
         ctx.arc(currX, currY, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = '#00f2fe';
-        ctx.shadowColor = '#00f2fe';
-        ctx.shadowBlur = 10;
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 12;
         ctx.fill();
         ctx.shadowBlur = 0;
       }
 
-      // E. Draw Nodes
+      // E. Draw Nodes with Neon Red & Blue Glows
       for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i];
         const currentRadius = n.radius + Math.sin(n.pulse) * 0.8;
 
         ctx.beginPath();
-        ctx.arc(n.x, n.y, Math.max(1, currentRadius), 0, Math.PI * 2);
+        ctx.arc(n.x, n.y, Math.max(1.2, currentRadius), 0, Math.PI * 2);
         ctx.fillStyle = n.color;
         ctx.shadowColor = n.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
         ctx.fill();
         ctx.shadowBlur = 0;
       }

@@ -1,10 +1,48 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Shield, ShieldCheck, Lock, Activity, FileCheck, ExternalLink, AlertTriangle } from 'lucide-react';
 
 export const Footer = () => {
+  const location = useLocation();
+  const [justBreached, setJustBreached] = useState(false);
+  const [portalBreached, setPortalBreached] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    if (location.pathname !== '/') return true;
+    try {
+      return sessionStorage.getItem('cybershield_portal_breached') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const onBreached = () => {
+      setPortalBreached(true);
+      setJustBreached(true);
+    };
+    const onReopen = () => {
+      try {
+        localStorage.removeItem('cybershield_portal_breached');
+        sessionStorage.removeItem('cybershield_portal_breached');
+      } catch (e) {
+        console.error(e);
+      }
+      setPortalBreached(false);
+      setJustBreached(false);
+    };
+    window.addEventListener('cybershield-portal-breached', onBreached);
+    window.addEventListener('cybershield-reopen-portal', onReopen);
+    return () => {
+      window.removeEventListener('cybershield-portal-breached', onBreached);
+      window.removeEventListener('cybershield-reopen-portal', onReopen);
+    };
+  }, []);
+
+
+
   return (
     <footer
+      className={justBreached ? 'portal-site-entrance' : ''}
       style={{
         backgroundColor: '#040711',
         borderTop: '1px solid rgba(56, 189, 248, 0.15)',
