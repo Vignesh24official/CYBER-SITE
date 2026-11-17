@@ -33,9 +33,9 @@ public class StateTransitionServiceImpl implements StateTransitionService {
         VALID_TRANSITIONS.put(ComplaintStatus.SUBMITTED, Set.of(ComplaintStatus.UNDER_REVIEW));
         VALID_TRANSITIONS.put(ComplaintStatus.UNDER_REVIEW, Set.of(ComplaintStatus.VALIDATED, ComplaintStatus.REJECTED));
         VALID_TRANSITIONS.put(ComplaintStatus.VALIDATED, Set.of(ComplaintStatus.ASSIGNED));
-        VALID_TRANSITIONS.put(ComplaintStatus.ASSIGNED, Set.of(ComplaintStatus.UNDER_INVESTIGATION));
+        VALID_TRANSITIONS.put(ComplaintStatus.ASSIGNED, Set.of(ComplaintStatus.UNDER_INVESTIGATION, ComplaintStatus.RESOLVED));
         VALID_TRANSITIONS.put(ComplaintStatus.UNDER_INVESTIGATION, Set.of(ComplaintStatus.WAITING_FOR_INFORMATION, ComplaintStatus.RESOLVED));
-        VALID_TRANSITIONS.put(ComplaintStatus.WAITING_FOR_INFORMATION, Set.of(ComplaintStatus.UNDER_INVESTIGATION));
+        VALID_TRANSITIONS.put(ComplaintStatus.WAITING_FOR_INFORMATION, Set.of(ComplaintStatus.UNDER_INVESTIGATION, ComplaintStatus.RESOLVED));
         VALID_TRANSITIONS.put(ComplaintStatus.RESOLVED, Set.of(ComplaintStatus.CLOSED));
         VALID_TRANSITIONS.put(ComplaintStatus.REJECTED, Collections.emptySet());
         VALID_TRANSITIONS.put(ComplaintStatus.CLOSED, Collections.emptySet());

@@ -1,12 +1,14 @@
 package com.cybershield.service.impl;
 
 import com.cybershield.dto.complaint.ComplaintResponse;
+import com.cybershield.dto.investigation.CaseResolutionRequest;
 import com.cybershield.dto.investigation.InvestigationNoteRequest;
 import com.cybershield.entity.Complaint;
 import com.cybershield.entity.InvestigationNote;
 import com.cybershield.entity.User;
 import com.cybershield.enums.AuditAction;
 import com.cybershield.enums.ComplaintStatus;
+import com.cybershield.enums.NotificationType;
 import com.cybershield.enums.RoleName;
 import com.cybershield.exception.ResourceNotFoundException;
 import com.cybershield.exception.UnauthorizedAccessException;
@@ -16,13 +18,17 @@ import com.cybershield.repository.UserRepository;
 import com.cybershield.security.SecurityUtils;
 import com.cybershield.security.UserPrincipal;
 import com.cybershield.service.AuditLogService;
+import com.cybershield.service.ComplaintService;
 import com.cybershield.service.InvestigationService;
+import com.cybershield.service.NotificationService;
 import com.cybershield.service.StateTransitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +42,9 @@ public class InvestigationServiceImpl implements InvestigationService {
     private final UserRepository userRepository;
     private final StateTransitionService stateTransitionService;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
+    @Lazy
+    private final ComplaintService complaintService;
 
     @Override
     @Transactional
@@ -103,5 +112,69 @@ public class InvestigationServiceImpl implements InvestigationService {
                         .createdAt(n.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public ComplaintResponse resolveCase(String complaintPublicId, CaseResolutionRequest request) {
+        UserPrincipal currentUser = SecurityUtils.getCurrentUser();
+        User investigator = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Complaint complaint = complaintRepository.findByPublicId(complaintPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintPublicId));
+
+        boolean isAdmin = investigator.getRole().getName() == RoleName.ROLE_ADMIN;
+        boolean isInvestigator = investigator.getRole().getName() == RoleName.ROLE_INVESTIGATOR;
+        boolean isCoordinator = investigator.getRole().getName() == RoleName.ROLE_COORDINATOR;
+
+        if (!isAdmin && !isInvestigator && !isCoordinator) {
+            throw new UnauthorizedAccessException("Only authorized security personnel can resolve investigations");
+        }
+
+        complaint.setResolutionVerdict(request.getResolutionVerdict().trim());
+        complaint.setResolutionSummary(request.getResolutionSummary().trim());
+        complaint.setActionsTakenSummary(request.getActionsTakenSummary() != null ? request.getActionsTakenSummary().trim() : null);
+        complaint.setCitizenGuidance(request.getCitizenGuidance() != null ? request.getCitizenGuidance().trim() : null);
+        complaint.setResolutionBadge(request.getResolutionBadge() != null ? request.getResolutionBadge().trim() : "VERIFIED_RESOLVED");
+        complaint.setResolvedAt(LocalDateTime.now());
+
+        complaintRepository.save(complaint);
+
+        stateTransitionService.transitionState(
+                complaint,
+                ComplaintStatus.RESOLVED,
+                investigator,
+                "Case resolved with verdict: " + request.getResolutionVerdict()
+        );
+
+        InvestigationNote closingNote = InvestigationNote.builder()
+                .complaint(complaint)
+                .investigator(investigator)
+                .note("OFFICIAL RESOLUTION ISSUED: " + request.getResolutionVerdict() + "\n\n" + request.getResolutionSummary())
+                .finding(request.getResolutionSummary())
+                .actionTaken(request.getActionsTakenSummary())
+                .recommendation(request.getCitizenGuidance())
+                .build();
+        investigationNoteRepository.save(closingNote);
+
+        notificationService.sendNotification(
+                complaint.getUser(),
+                NotificationType.COMPLAINT_RESOLVED,
+                "Case Resolved: " + complaint.getComplaintNumber(),
+                "Your cyber incident investigation has concluded. Verdict: " + request.getResolutionVerdict() + ". View the official resolution report on your portal.",
+                "COMPLAINT",
+                complaint.getPublicId()
+        );
+
+        auditLogService.logAction(
+                investigator,
+                AuditAction.STATUS_CHANGE,
+                "COMPLAINT_RESOLUTION",
+                complaint.getComplaintNumber(),
+                "Investigation resolved with verdict: " + request.getResolutionVerdict()
+        );
+
+        return complaintService.getComplaintByPublicId(complaintPublicId);
     }
 }

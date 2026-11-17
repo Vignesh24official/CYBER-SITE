@@ -84,7 +84,12 @@ CREATE TABLE IF NOT EXISTS complaints (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP,
-    closed_at TIMESTAMP
+    closed_at TIMESTAMP,
+    resolution_verdict VARCHAR(150),
+    resolution_summary TEXT,
+    actions_taken_summary TEXT,
+    citizen_guidance TEXT,
+    resolution_badge VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS complaint_status_history (
@@ -130,6 +135,19 @@ CREATE TABLE IF NOT EXISTS evidence_files (
     file_size BIGINT NOT NULL,
     storage_path TEXT NOT NULL,
     checksum VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CASE CHAT MESSAGES
+CREATE TABLE IF NOT EXISTS case_messages (
+    id BIGSERIAL PRIMARY KEY,
+    complaint_id BIGINT NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
+    sender_id BIGINT NOT NULL REFERENCES users(id),
+    message TEXT NOT NULL,
+    sender_role VARCHAR(50) NOT NULL,
+    attachment_name VARCHAR(200),
+    attachment_data TEXT,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -343,5 +361,6 @@ VALUES
 (4, '4', 'create notifications and audit', 'SQL', 'V4__create_notifications_and_audit.sql', 'postgres', 1, true),
 (5, '5', 'create safety articles', 'SQL', 'V5__create_safety_articles.sql', 'postgres', 1, true),
 (6, '6', 'seed initial data', 'SQL', 'V6__seed_initial_data.sql', 'postgres', 1, true),
-(7, '7', 'add coordinator role and seed', 'SQL', 'V7__add_coordinator_role_and_seed.sql', 'postgres', 1, true)
+(7, '7', 'add coordinator role and seed', 'SQL', 'V7__add_coordinator_role_and_seed.sql', 'postgres', 1, true),
+(8, '8', 'add chat messages and resolution fields', 'SQL', 'V8__add_chat_messages_and_resolution_fields.sql', 'postgres', 1, true)
 ON CONFLICT (installed_rank) DO NOTHING;

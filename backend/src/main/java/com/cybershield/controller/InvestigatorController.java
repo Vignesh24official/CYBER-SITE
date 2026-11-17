@@ -76,4 +76,14 @@ public class InvestigatorController {
         ComplaintResponse response = complaintService.updateStatus(publicId, request);
         return ResponseEntity.ok(ApiResponse.ok(response, "Case status updated successfully"));
     }
+
+    @PostMapping("/cases/{publicId}/resolve")
+    @Operation(summary = "Resolve investigation case and dispatch formal report to citizen")
+    public ResponseEntity<ApiResponse<ComplaintResponse>> resolveCase(
+            @PathVariable String publicId,
+            @Valid @RequestBody com.cybershield.dto.investigation.CaseResolutionRequest request
+    ) {
+        ComplaintResponse response = investigationService.resolveCase(publicId, request);
+        return ResponseEntity.ok(ApiResponse.ok(response, "Case investigation resolved and report dispatched to citizen"));
+    }
 }

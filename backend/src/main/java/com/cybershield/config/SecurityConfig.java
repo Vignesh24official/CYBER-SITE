@@ -44,9 +44,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/safety-articles/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
+                .requestMatchers("/portal/**", "/*.jsp", "/WEB-INF/**", "/error").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/investigator/**", "/api/v1/coordinator/**").hasAnyRole("COORDINATOR", "INVESTIGATOR", "ADMIN")
                 .requestMatchers("/api/v1/user/**").hasAnyRole("USER", "COORDINATOR", "INVESTIGATOR", "ADMIN")
+                .requestMatchers("/api/v1/complaints/**").hasAnyRole("USER", "COORDINATOR", "INVESTIGATOR", "ADMIN")
+                .requestMatchers("/api/v1/evidence/**").hasAnyRole("USER", "COORDINATOR", "INVESTIGATOR", "ADMIN")
                 .anyRequest().authenticated()
             );
 

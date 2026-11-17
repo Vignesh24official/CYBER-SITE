@@ -42,6 +42,12 @@ public class ComplaintResponse {
     private LocalDateTime resolvedAt;
     private LocalDateTime closedAt;
 
+    private String resolutionVerdict;
+    private String resolutionSummary;
+    private String actionsTakenSummary;
+    private String citizenGuidance;
+    private String resolutionBadge;
+
     private UserDto assignedInvestigator;
     private List<StatusHistoryResponse> statusHistory;
     private List<EvidenceFileResponse> evidenceFiles;

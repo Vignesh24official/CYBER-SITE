@@ -3,6 +3,10 @@ spring:
     name: cybershield-backend
   profiles:
     active: ${spring.profiles.active:${SPRING_PROFILES_ACTIVE:dev}}
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
   servlet:
     multipart:
       max-file-size: 15MB

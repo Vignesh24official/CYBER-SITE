@@ -105,6 +105,21 @@ public class Complaint {
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
 
+    @Column(name = "resolution_verdict", length = 150)
+    private String resolutionVerdict;
+
+    @Column(name = "resolution_summary", columnDefinition = "TEXT")
+    private String resolutionSummary;
+
+    @Column(name = "actions_taken_summary", columnDefinition = "TEXT")
+    private String actionsTakenSummary;
+
+    @Column(name = "citizen_guidance", columnDefinition = "TEXT")
+    private String citizenGuidance;
+
+    @Column(name = "resolution_badge", length = 50)
+    private String resolutionBadge;
+
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ComplaintStatusHistory> statusHistories = new ArrayList<>();
@@ -120,6 +135,10 @@ public class Complaint {
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<EvidenceFile> evidenceFiles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CaseMessage> messages = new ArrayList<>();
 
     @PrePersist
     public void ensurePublicId() {

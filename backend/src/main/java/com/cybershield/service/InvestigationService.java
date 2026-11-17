@@ -8,4 +8,5 @@ import java.util.List;
 public interface InvestigationService {
     ComplaintResponse.InvestigationNoteResponse addNote(String complaintPublicId, InvestigationNoteRequest request);
     List<ComplaintResponse.InvestigationNoteResponse> getNotes(String complaintPublicId);
+    ComplaintResponse resolveCase(String complaintPublicId, com.cybershield.dto.investigation.CaseResolutionRequest request);
 }
